@@ -14,9 +14,9 @@ Out = open(outFile,'w')
 
 par = Parser(inFile)
 
-while par.hasMoreCommands:
+while par.hasMoreCommands():
 	par.advance()
-	Out.write(par.output)
+	Out.write(par.output())
 
-par.stats
+par.stats()
 Out.close()

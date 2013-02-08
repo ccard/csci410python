@@ -95,61 +95,61 @@ class Parser:
 				return curState
 
 	def hasMoreCommands(self):
-		return natend
+		return self.natend
 
 	def advance(self):
-		if len(linein) == lineplace:
-			temp = self.filein.tell
-			linein = self.filein.readline()
-			if temp == self.filein.tell():
-				self.filein.close()
-				natend=False
-				return
+		temp = self.filein.tell()
+		self.linein = self.filein.readline()
+		if temp == self.filein.tell():
+			self.lineout=''
+			self.filein.close()
+			self.natend=False
+			return
 
-			else:
-				linCount+=1
-				newEol_charcount+=len(lineout)
-				newLinCount+=1
-				lineout=''
+		self.linCount+=1
+		self.lineout=''
 
-		for c in  linein:
-			charCount+=1
-			state = isComment(state,c)
+		for c in  self.linein:
+			self.charCount+=1
+			self.state = self.isComment(self.state,c)
 	
-			if state == 2:
-				lineout += c
+			if self.state == 2:
+				self.lineout += c
 	
-			elif state == 3:
-				lineout = ''
-				eol_charcount+=1
+			elif self.state == 3:
+				self.lineout = ''
+				self.eol_charcount+=1
 	
-			elif state == 7:
-				state = 1
-				eol_comments+=1
-				lineout +='\n'
+			elif self.state == 7:
+				self.state = 1
+				self.eol_comments+=1
+				self.lineout +='\n'
 	
-			elif state == 4 or state == 5:
-				block_charCount+=1
-				lineout=''
+			elif self.state == 4 or self.state == 5:
+				self.block_charCount+=1
+				self.lineout=''
 	
-			elif state == 6:
-				block_count+=1
-				state = 1
-				lineout+='\n'
+			elif self.state == 6:
+				self.block_count+=1
+				self.state = 1
+				self.lineout+='\n'
 	
 			else:
-				lineout+=c
+				self.lineout+=c
+
+		self.newCharCount+=len(self.lineout)
+		self.newLinCount+=1
 
 	def output(self):
-		return lineout
+		return self.lineout
 
 	def stats(self):
 		print('\t\tINPUT\t\tOUTPUT')
-		print('Filename\t'+infile+'\t\t')
-		print('Lines \t\t'+repr(linCount)+'\t\t'+repr(newLinCount))
-		print('Characters\t'+repr(charCount)+'\t\t'+repr(newCharCount))
-		print('Block comments\t'+repr(block_count)+'\t\t'+repr(newBlock_count))
-		print('   characters\t'+repr(block_charCount)+'\t\t'+repr(newBlock_charCount))
-		print('EOL comments\t'+repr(eol_comments)+'\t\t'+repr(newEol_comments))
-		print('    characters\t'+repr(eol_charcount)+'\t\t'+repr(newEol_charcount))
+		print('Filename\t'+self.infile+'\t\t')
+		print('Lines \t\t'+repr(self.linCount)+'\t\t'+repr(self.newLinCount))
+		print('Characters\t'+repr(self.charCount)+'\t\t'+repr(self.newCharCount))
+		print('Block comments\t'+repr(self.block_count)+'\t\t'+repr(self.newBlock_count))
+		print('   characters\t'+repr(self.block_charCount)+'\t\t'+repr(self.newBlock_charCount))
+		print('EOL comments\t'+repr(self.eol_comments)+'\t\t'+repr(self.newEol_comments))
+		print('    characters\t'+repr(self.eol_charcount)+'\t\t'+repr(self.newEol_charcount))
 
