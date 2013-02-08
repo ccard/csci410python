@@ -6,6 +6,7 @@ import sys, string, os, io
 class Parser:
 	#place in line
 	lineplace = 0
+
 	#state = 0 start of reading
 	#state = 1 no comment starting character encountered
 	#state = 2 / encountered
@@ -15,12 +16,18 @@ class Parser:
 	#state = 6 * followed by / end of block comment
 	#state = 7 eol comment state 3 ending with \n
 	state = 0
+
 	#line to print out
 	lineout=''
+
 	#line from file
 	linein=''
+
 	#is at end of file
-	atend=False
+	natend=True
+
+	#the input file
+	infile=''
 
 	#counts for the old file summary
 	charCount=0
@@ -38,9 +45,9 @@ class Parser:
 	newEol_comments=0
 	newEol_charcount=0
 
-	def __init__(self,filein,fileout):
+	def __init__(self,filein):
 			self.filein = open(filein)
-			self.fileout = open(fileout,'w')
+			infile = filein
 
 
 	def isComment(self,curState, character):
@@ -88,12 +95,61 @@ class Parser:
 				return curState
 
 	def hasMoreCommands(self):
-		return atend
+		return natend
 
 	def advance(self):
 		if len(linein) == lineplace:
 			temp = self.filein.tell
 			linein = self.filein.readline()
 			if temp == self.filein.tell():
+				self.filein.close()
+				natend=False
 				return
+
+			else:
+				linCount+=1
+				newEol_charcount+=len(lineout)
+				newLinCount+=1
+				lineout=''
+
+		for c in  linein:
+			charCount+=1
+			state = isComment(state,c)
+	
+			if state == 2:
+				lineout += c
+	
+			elif state == 3:
+				lineout = ''
+				eol_charcount+=1
+	
+			elif state == 7:
+				state = 1
+				eol_comments+=1
+				lineout +='\n'
+	
+			elif state == 4 or state == 5:
+				block_charCount+=1
+				lineout=''
+	
+			elif state == 6:
+				block_count+=1
+				state = 1
+				lineout+='\n'
+	
+			else:
+				lineout+=c
+
+	def output(self):
+		return lineout
+
+	def stats(self):
+		print('\t\tINPUT\t\tOUTPUT')
+		print('Filename\t'+infile+'\t\t')
+		print('Lines \t\t'+repr(linCount)+'\t\t'+repr(newLinCount))
+		print('Characters\t'+repr(charCount)+'\t\t'+repr(newCharCount))
+		print('Block comments\t'+repr(block_count)+'\t\t'+repr(newBlock_count))
+		print('   characters\t'+repr(block_charCount)+'\t\t'+repr(newBlock_charCount))
+		print('EOL comments\t'+repr(eol_comments)+'\t\t'+repr(newEol_comments))
+		print('    characters\t'+repr(eol_charcount)+'\t\t'+repr(newEol_charcount))
 
