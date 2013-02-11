@@ -1,4 +1,8 @@
 import sys, string, os, io
+#Chris Card
+#CS410
+#Python02
+#due:2/6/13
 from parser import Parser
 
 #checks the number of arguments passed in command line
