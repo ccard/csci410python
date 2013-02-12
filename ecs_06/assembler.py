@@ -28,13 +28,24 @@ def dest_lookup(dest):
 
 #------------------------------------------------------------------------------
 #looks up symbol if it isn't there adds it
-def symbol_lookup(sym,line_num):
+def symbol_lookup(sym,line_num,is_label):
 	temp_sym=sym.strip('(')
 	temp_sym=sym.strip(')')
-	if sym in symbol_table:
-		return symbol_table[sym]
+	if temp_sym in symbol_table:
+		if is_label:
+			sym = sym.strip('(')
+			sym = sym.strip(')')
+			bi = bin(line_num)
+			bi = bi.strip('-0b')
+			dif = 15 - len(bi)
+			bi = '0'*dif+bi
+			old=symbol_table[sym]
+			symbol_table[sym]=bi
+			return 's'+bi+';'+old
+		else:
+			return symbol_table[temp_sym]
 	else:
-		if re.search('\(.*\)') != None:
+		if is_label:
 			sym = sym.strip('(')
 			sym = sym.strip(')')
 			bi = bin(line_num)
@@ -52,6 +63,23 @@ def symbol_lookup(sym,line_num):
 			user_def_count +=1
 			return bi
 
+#------------------------------------------------------------------------------
+#This goes back an replaces the appropriate value in the input
+def search_replace(original,newline):
+	newline = newline.strip('s')
+	old_new = re.split(';',newline)
+	old=old_new[1]
+	newline=old_new[0]
+
+	listOrig = re.split('\n',original)
+	newOld=''
+	for line in listOrig:
+		if line == old:
+			newOld+=newline+'\n'
+		else:
+			newOld+=line+'\n'
+
+	return newOld
 
 #------------------------------------------------------------------------------
 #Var declerations
@@ -105,17 +133,23 @@ IN=open(in_file)
 OUT=open(out_file,'w')
 
 toWrite=''
+output=''
 line_num=0
 for line in IN:
 	line = line.strip()
 	if re.search('^\@.*',line) != None:
-		line_num+=1
 		toWrite+='0'
 		line = line.strip('@')
-		toWrite+=symbol_lookup(line,line_num)
+		toWrite+=symbol_lookup(line,line_num,False)
+		line_num+=1
+
+	elif re.search('^\(.*\)',line) != None:
+		temp_s = symbol_lookup(line,line_num,True)
+		if re.search('s.*\;.*',temp_s) != None:
+			output = search_replace(output,temp_s)
+		line_num+=1
 
 	elif re.search('^\/\/',line) == None:
-		line_num+=1
 		toWrite='111'
 
 		if re.search('.*\/\/.*',line) != None:
@@ -148,10 +182,14 @@ for line in IN:
 				toWrite+=comp_lookup(temp_dest.group(2))
 				toWrite+=dest_lookup(temp_dest.group(0))
 				toWrite+=jump_lookup(temp_dest.group(4))
+		line_num+=1
 	
 	if len(toWrite) > 0:
-		OUT.write(toWrite)
+		output+=toWrite+'\n'
 		toWrite=''
 #End for loop
+
+IN.close()
+
 
 #---------------------------End Program----------------------------------------
