@@ -27,8 +27,17 @@ def dest_lookup(dest):
 		sys.exit(0)
 
 #------------------------------------------------------------------------------
+#This looks up jump commands and returns the appropriate bit sequence
+def jump_lookup(jump):
+	if jump in jump_table:
+		return jump_table[jump]
+	else:
+		print('Unrecognized jump'+jump+' !')
+		sys.exit(0)
+
+#------------------------------------------------------------------------------
 #looks up symbol if it isn't there adds it
-def symbol_lookup(sym,line_num,is_label):
+def symbol_lookup(sym,line_num,is_label,user_def):
 	temp_sym=sym.strip('(')
 	temp_sym=sym.strip(')')
 	if temp_sym in symbol_table:
@@ -54,14 +63,20 @@ def symbol_lookup(sym,line_num,is_label):
 			bi = '0'*dif+bi
 			symbol_table[sym]=bi
 			return bi
-		else:
-			bi = bin(user_def_count)
-			bi = bi.strip('-0b')
+		elif re.search('[A-Za-z\_\.\$\:]+[0-9]*[A-Za-z\_\.\$\:]*',sym) is not None:
+			bi = bin(user_def)
+			bi = bi.lstrip('-0b')
 			dif = 15 - len(bi)
 			bi = '0'*dif+bi
 			symbol_table[sym]=bi
-			user_def_count +=1
-			return bi
+			return 'uc'+bi
+		else:
+			bi = bin(int(sym))
+			bi = bi.lstrip('-0b')
+			dif = 15 - len(bi)
+			bi = '0'*dif+bi
+			symbol_table[sym]=bi
+			return 'uc'+bi
 
 #------------------------------------------------------------------------------
 #This goes back an replaces the appropriate value in the input
@@ -122,8 +137,7 @@ if re.search('.*\.asm',in_file) == None:
 	print('incorrect file name!')
 	sys.exit(0)
 
-temp_out=re.search('(.*)(\.asm)',in_file)
-out_file=temp_out.group(0)
+out_file=in_file.strip('.asm')
 out_file+='.hack'
 
 #------------------------------------------------------------------------------
@@ -137,51 +151,63 @@ output=''
 line_num=0
 for line in IN:
 	line = line.strip()
-	if re.search('^\@.*',line) != None:
+
+	if re.search('^\@.*',line) is not None:
 		toWrite+='0'
 		line = line.strip('@')
-		toWrite+=symbol_lookup(line,line_num,False)
+		toWrite+=symbol_lookup(line,line_num,False,user_def_count)
+		if re.search('uc',toWrite) is not None:
+			temp = re.search('(.*)(uc)(.*)',toWrite)
+			toWrite = temp.group(1)+temp.group(3)
+			user_def_count+=1
+		
 		line_num+=1
 
-	elif re.search('^\(.*\)',line) != None:
-		temp_s = symbol_lookup(line,line_num,True)
-		if re.search('s.*\;.*',temp_s) != None:
+	elif re.search('^\(.*\)',line) is not None:
+		temp_s = symbol_lookup(line,line_num,True,user_def_count)
+		if re.search('s.*\;.*',temp_s) is not None:
 			output = search_replace(output,temp_s)
+		if re.search('uc',temp_s) is not None:
+			temp = re.search('(.*)(uc)(.*)',temp_s)
+			toWrite += temp.group(1)+temp.group(3)
+			user_def_count+=1
 		line_num+=1
 
-	elif re.search('^\/\/',line) == None:
+	elif re.search('^\/\/',line) is None and len(line) > 1:
 		toWrite='111'
+		
+		if re.search('.*\/\/.*',line) is not None:
+			temp_line = re.search('(.*)(\/\/.*)',line)
+			line=temp_line.group(1)
+			line.strip()
+			print('here')
 
-		if re.search('.*\/\/.*',line) != None:
-			temp_line = re.search('(.*)(\/\/.*)')
-			line=temp_line.group(0)
-
-		if re.search('M',line) == None:
+		if re.search('=.*M.*',line) is None:
 			toWrite+='0'
 		else:
 			toWrite+='1'
 
-		if re.search('\=',line) == None:
-			if re.search(';',line) == None:
+		if re.search('\=',line) is None:
+			if re.search(';',line) is None:
 				toWrite+=comp_lookup(line)
 				toWrite+=dest_lookup('null')
 				toWrite+=jump_lookup('null')
 			else:
-				temp_jump = re.search('(.*)(;)(.*)')
-				toWrite+=comp_lookup(temp_jump.group(0))
+				temp_jump = re.search('(.*)(;)(.*)',line)
+				toWrite+=comp_lookup(temp_jump.group(1))
 				toWrite+=dest_lookup('null')
-				toWrite+=jump_lookup(temp_jump.group(2))
+				toWrite+=jump_lookup(temp_jump.group(3))
 		else:
-			if re.search(';',line) == None:
-				temp_dest=re.search('(.*)(\=)(.*)')
-				toWrite+=comp_lookup(temp_dest.group(2))
-				toWrite+=dest_lookup(temp_dest.group(0))
+			if re.search(';',line) is None:
+				temp_dest=re.search('(.*)(\=)(.*)',line)
+				toWrite+=comp_lookup(temp_dest.group(3))
+				toWrite+=dest_lookup(temp_dest.group(1))
 				toWrite+=jump_lookup('null')
 			else:
-				temp_dest = re.search('(.*)(\=)(.*)(;)(.*)')
-				toWrite+=comp_lookup(temp_dest.group(2))
-				toWrite+=dest_lookup(temp_dest.group(0))
-				toWrite+=jump_lookup(temp_dest.group(4))
+				temp_dest = re.search('(.*)(\=)(.*)(;)(.*)',line)
+				toWrite+=comp_lookup(temp_dest.group(3))
+				toWrite+=dest_lookup(temp_dest.group(1))
+				toWrite+=jump_lookup(temp_dest.group(5))
 		line_num+=1
 	
 	if len(toWrite) > 0:
