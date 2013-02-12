@@ -191,5 +191,8 @@ for line in IN:
 
 IN.close()
 
+OUT.write(output)
+OUT.close()
+
 
 #---------------------------End Program----------------------------------------
