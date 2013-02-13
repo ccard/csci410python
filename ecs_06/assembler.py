@@ -103,12 +103,14 @@ def search_replace(original,newline):
 def user_def_replace(out,symbol_table,user_def):
 	original = re.split('\n+',out)
 	newout=''
+	repeat = 0
 
 	for line in original:
 		if len(line) > 0:
 			if re.search('^\(.*\)COUNT',line) is not None:
 				temp_sym = re.search('(^\(.*\))(COUNT)',line)
 				temp_s = symbol_lookup(temp_sym.group(1),user_def,False,symbol_table)
+
 				if re.search('^\(.*\)COUNT',temp_s) is not None:
 					temp = temp_sym.group(1).strip('()')
 					bi = bin(user_def)
@@ -118,7 +120,11 @@ def user_def_replace(out,symbol_table,user_def):
 					symbol_table[temp]=bi
 					newout+='('+temp+')'+bi+'\n'
 					print(temp+':'+repr(user_def))
-					#user_def+=1
+					repeat+=1
+					user_def+=1
+					if repeat == 2:
+						user_def=16
+						repeat=0
 				else:
 					newout+=temp_s+'\n'
 			else:
