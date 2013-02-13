@@ -77,8 +77,6 @@ def user_def_replace(out,symbol_table,user_def):
 	original = re.split('\n+',out)
 	
 	newout=''
-	#count for assigning registars to user def vars
-	repeat = 0
 
 	for line in original:
 		if len(line) > 0: #ensures that the line is not empty
@@ -97,11 +95,7 @@ def user_def_replace(out,symbol_table,user_def):
 					symbol_table[temp]=bi
 					newout+='('+temp+')'+bi+'\n'
 					print(temp+':'+repr(user_def))
-					repeat+=1
 					user_def+=1
-					if repeat == 2:
-						user_def=16
-						repeat=0
 				else:
 					newout+=temp_s+'\n'
 			else:
