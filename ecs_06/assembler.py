@@ -50,7 +50,7 @@ def symbol_lookup(sym,line_num,is_label,user_def,symbol_table):
 			return 's'+'('+sym+')'+bi+';'+'('+sym+')'+old
 
 		else:
-			return symbol_table[sym]
+			return '('+sym+')'+symbol_table[sym]
 
 	else:
 		if is_label:
@@ -91,12 +91,14 @@ def search_replace(original,newline):
 	newOld=''
 
 	for line in listOrig:
+		if len(line)>0:
+			if line in old:
+				if 'ponggame.O'in old:
+					print(new+':'+line)
+				newOld+=new+'\n'
 
-		if old in line:
-			newOld+=new+'\n'
-
-		elif len(line)>0:
-			newOld+=line+'\n'
+			else:
+				newOld+=line+'\n'
 			
 	
 	return newOld
