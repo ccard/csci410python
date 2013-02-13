@@ -180,8 +180,8 @@ for line in IN:
 		line = line.lstrip('@')
 		toWrite+=symbol_lookup(line,line_num,False,user_def_count,symbol_table)
 		if re.search('uc',toWrite) is not None:
-			temp = re.search('(.*)(uc)(.*)',toWrite)
-			toWrite = temp.group(1)+temp.group(3)
+			temp = re.search('(uc)(.*)',toWrite)
+			toWrite = temp.group(2)
 			user_def_count+=1
 		
 		line_num+=1
