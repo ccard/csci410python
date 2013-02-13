@@ -47,7 +47,6 @@ def symbol_lookup(sym,line_num,is_label,user_def,symbol_table):
 			bi = '0'*dif+bi
 			old=symbol_table[sym]
 			symbol_table[sym]=bi
-			print(sym+':'+repr(line_num)+':'+bi+':'+old)
 			return 's'+'('+sym+')'+bi+';'+'('+sym+')'+old
 
 		else:
@@ -68,7 +67,7 @@ def symbol_lookup(sym,line_num,is_label,user_def,symbol_table):
 			dif = 16 - len(bi)
 			bi = '0'*dif+bi
 			symbol_table[sym]=bi
-			return 'uc'+bi
+			return 'uc'+'('+sym+')'+bi
 
 		else:
 			bi = bin(int(sym))
@@ -76,7 +75,7 @@ def symbol_lookup(sym,line_num,is_label,user_def,symbol_table):
 			dif = 16 - len(bi)
 			bi = '0'*dif+bi
 			symbol_table[sym]=bi
-			return bi
+			return '('+sym+')'+bi
 
 #------------------------------------------------------------------------------
 #This goes back an replaces the appropriate value in the input
@@ -84,7 +83,8 @@ def search_replace(original,newline):
 	newline = newline.lstrip('s')
 	old_new = re.split(';',newline)
 	old=old_new[1]
-	newline=old_new[0]
+	old=old.strip('\n')
+	new=old_new[0]
 	
 	listOrig = re.split('\n+',original)
 
@@ -92,12 +92,10 @@ def search_replace(original,newline):
 
 	for line in listOrig:
 
-		if line.find(old) > -1:
-			print(old+':'+newline)
-			newOld+=newline+'\n'
+		if line in old:
+			newOld+=new+'\n'
 
 		elif len(line)>0:
-			print(old+'old'+'new'+newline)
 			newOld+=line+'\n'
 
 	return newOld
@@ -190,13 +188,11 @@ for line in IN:
 
 	elif re.search('^\(.*\)',line) is not None:
 		temp_s = symbol_lookup(line,line_num,True,user_def_count,symbol_table)
-		print(temp_s)
+		
 		if re.search('s.*\;.*',temp_s) is not None:
 			output = search_replace(output,temp_s)
 			
 		if re.search('uc',temp_s) is not None:
-			temp = re.search('(.*)(uc)(.*)',temp_s)
-			toWrite += temp.group(1)+temp.group(3)
 			user_def_count+=1
 
 	elif re.search('^\/\/',line) is None and len(line) > 1:
