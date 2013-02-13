@@ -118,7 +118,7 @@ def user_def_replace(out,symbol_table,user_def):
 					symbol_table[temp]=bi
 					newout+='('+temp+')'+bi+'\n'
 					print(temp+':'+repr(user_def))
-					user_def+=1
+					#user_def+=1
 				else:
 					newout+=temp_s+'\n'
 			else:
