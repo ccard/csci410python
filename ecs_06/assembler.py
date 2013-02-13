@@ -1,15 +1,17 @@
 import sys, string, os, io,re
+#------------------------------------------------------------------------------
 #Chris Card
 #CS410
-#Python02
-#due:2/25/13
-
-#------------------------------------------------------------------------------
-#DEF sub routines
+#ECS project 06
+#Due:2/25/13
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-#Looks up comp in comp_table if it isn't there reports error and exits
+# Def sub routines
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# Looks up comp in comp_table if it isn't there reports error and exits
 def comp_lookup(comp,line):
 	if comp in comp_table:
 		return comp_table[comp]
@@ -18,7 +20,7 @@ def comp_lookup(comp,line):
 		sys.exit(0)
 
 #------------------------------------------------------------------------------
-#Looks up dest in dest_table if it isn't there reports error and exits
+# Looks up dest in dest_table if it isn't there reports error and exits
 def dest_lookup(dest,line):
 	if dest in dest_table:
 		return dest_table[dest]
@@ -27,7 +29,7 @@ def dest_lookup(dest,line):
 		sys.exit(0)
 
 #------------------------------------------------------------------------------
-#This looks up jump commands and returns the appropriate bit sequence
+# This looks up jump commands and returns the appropriate bit sequence
 def jump_lookup(jump,line):
 	if jump in jump_table:
 		return jump_table[jump]
@@ -36,7 +38,7 @@ def jump_lookup(jump,line):
 		sys.exit(0)
 
 #------------------------------------------------------------------------------
-#looks up symbol if it isn't there adds it
+# Looks up symbol if it isn't there adds it
 def symbol_lookup(sym,line_num,is_label,symbol_table):
 	sym=sym.strip('()')
 	if sym in symbol_table:
@@ -58,12 +60,13 @@ def symbol_lookup(sym,line_num,is_label,symbol_table):
 			symbol_table[sym]=bi
 			return bi
 
+		#user defind variable
 		elif re.search('[A-Za-z\_\.\$\:]+[0-9A-Za-z\_\.\$\:]*',sym) is not None:
 			bi = 'COUNT' #user def vars 
 			symbol_table[sym]='('+sym+')'+bi
 			return '('+sym+')'+bi
 
-		else:
+		else: #explicitly defined variable
 			bi = bin(int(sym))
 			bi = bi.lstrip('-0b')
 			dif = 16 - len(bi)
@@ -72,7 +75,8 @@ def symbol_lookup(sym,line_num,is_label,symbol_table):
 			return bi
 
 #------------------------------------------------------------------------------
-#This goes through the line and replaces (sym)count with a number and updates table
+# This goes through the line and replaces (sym)count with a number and updates 
+# table
 def user_def_replace(out,symbol_table,user_def):
 	original = re.split('\n+',out)
 	
@@ -95,14 +99,16 @@ def user_def_replace(out,symbol_table,user_def):
 					symbol_table[temp]=bi
 					newout+='('+temp+')'+bi+'\n'
 					user_def+=1
+
 				else:
 					newout+=temp_s+'\n'
+			
 			else:
 				newout+=line+'\n'
 	return newout
 
 #------------------------------------------------------------------------------
-#cleans the output of (sym)
+# Cleans the output of '(sym)'
 def clean_out(to_clean):
 	listOrig = re.split('\n+',to_clean)
 
@@ -113,13 +119,15 @@ def clean_out(to_clean):
 		if re.search('^\(.*\).*',line) is not None:
 			temp = re.search('(^\(.*\))(.*)',line)
 			newOld+=temp.group(2)+'\n'
+		
 		else:
 			newOld+=line+'\n'
+	
 	newOld = newOld.strip('\n')
 	return newOld
 
 #------------------------------------------------------------------------------
-#Var declerations
+# Var declerations
 #------------------------------------------------------------------------------
 comp_table={'0':'101010','1':'111111','-1':'111010','D':'001100',
 			'A':'110000', 'M':'110000', '!D':'001101','!A':'110001',
@@ -150,7 +158,7 @@ in_file=''
 out_file=''
 
 #------------------------------------------------------------------------------
-#Check user input
+# Check user input
 #------------------------------------------------------------------------------
 if len(sys.argv) < 2: #checks to see if user put in file
 	print('incorrect number of args!')
@@ -164,16 +172,16 @@ if re.search('.*\.asm',in_file) == None:
 	print('incorrect file name!')
 	sys.exit(0)
 
-#strips asm of the end and adds hack
-out_file=in_file.rstrip('.asm')
-out_file+='.hack'
+#strips .asm of the end and adds .hack
+temp_out=re.search('(.*)(\.asm)',in_file)
+out_file+=temp_out.group(1)+'.hack'
 
 #------------------------------------------------------------------------------
-#Main
+# Main
 #------------------------------------------------------------------------------
 IN=open(in_file)
 
-#builds the symbol table
+#Builds the symbol table
 line_num=0
 for line in IN:
 	line = line.strip()
@@ -182,13 +190,13 @@ for line in IN:
 		line = line.lstrip('@')
 		toWrite=symbol_lookup(line,line_num,False,symbol_table)
 		line_num+=1
-
+	#if label
 	elif re.search('^\(.*\)',line) is not None:
 		symbol_lookup(line,line_num,True,symbol_table)
-
+	#if line is a command and not empty
 	elif re.search('^\/\/',line) is None and len(line) > 1:
 		line_num+=1
-#end for loop
+#End for loop
 
 IN.close
 IN=open(in_file)
@@ -196,9 +204,12 @@ OUT=open(out_file,'w')
 
 toWrite=''
 output=''
+#keeps track of line number as far as .hack file is concerned
 line_num=0
+#keeps count for general error reporting
 overall_line_num=0
-#builds the output
+
+#Builds the output
 for line in IN:
 	line = line.strip()
 
@@ -207,13 +218,15 @@ for line in IN:
 		toWrite+=symbol_lookup(line,line_num,False,symbol_table)
 		line_num+=1
 
+	#if the line is a label then we just want to ensure that it
+	#doesn't get read in as a command and cause an error
 	elif re.search('^\(.*\)',line) is not None:
 		temp_s='This is here to ensure that labels don`t get printed to output'
 
 	elif re.search('^\/\/',line) is None and len(line) > 1:
 		toWrite='111' #command begining
 		
-		#if there is a comment in middle or end of line
+		#if there is a comment at end of line
 		if re.search('.*\/\/.*',line) is not None:
 			#strips comment off
 			temp_line = re.search('(.*)(\/\/.*)',line)
@@ -265,6 +278,4 @@ output = user_def_replace(output,symbol_table,user_def_count)
 output = clean_out(output)
 OUT.write(output)
 OUT.close()
-
-
 #---------------------------End Program----------------------------------------
