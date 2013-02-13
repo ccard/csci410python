@@ -92,12 +92,13 @@ def search_replace(original,newline):
 
 	for line in listOrig:
 
-		if line in old:
+		if old in line:
 			newOld+=new+'\n'
 
 		elif len(line)>0:
 			newOld+=line+'\n'
-
+			
+	
 	return newOld
 
 #------------------------------------------------------------------------------
