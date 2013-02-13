@@ -61,7 +61,7 @@ def symbol_lookup(sym,line_num,is_label,user_def,symbol_table):
 			symbol_table[sym]=bi
 			return '('+sym+')'+bi
 
-		elif re.search('[A-Za-z\_\.\$\:]+[0-9]*[A-Za-z\_\.\$\:]*',sym) is not None:
+		elif re.search('[A-Za-z\_\.\$\:]+[0-9A-Za-z\_\.\$\:]*',sym) is not None:
 			bi = bin(user_def)
 			bi = bi.lstrip('-0b')
 			dif = 16 - len(bi)
@@ -93,7 +93,7 @@ def search_replace(original,newline):
 	for line in listOrig:
 		if len(line)>0:
 			if line in old:
-				if 'ponggame.O'in old:
+				if 'ponggame'in old:
 					print(new+':'+line)
 				newOld+=new+'\n'
 
@@ -194,9 +194,7 @@ for line in IN:
 		
 		if re.search('s.*\;.*',temp_s) is not None:
 			output = search_replace(output,temp_s)
-			
-		if re.search('uc',temp_s) is not None:
-			user_def_count+=1
+			user_def_count-=1
 
 	elif re.search('^\/\/',line) is None and len(line) > 1:
 		toWrite='111'
