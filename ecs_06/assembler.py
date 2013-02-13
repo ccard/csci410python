@@ -45,12 +45,9 @@ def symbol_lookup(sym,line_num,is_label,symbol_table):
 			bi = bi.lstrip('-0b')
 			dif = 16 - len(bi)
 			bi = '0'*dif+bi
-			old=symbol_table[sym]
 			symbol_table[sym]=bi
-			return 's'+'('+sym+')'+bi+';'+'('+sym+')'+old
 
-		else:
-			return '('+sym+')'+symbol_table[sym]
+		return symbol_table[sym]
 
 	else:
 		if is_label:
@@ -59,11 +56,11 @@ def symbol_lookup(sym,line_num,is_label,symbol_table):
 			dif = 16 - len(bi)
 			bi = '0'*dif+bi
 			symbol_table[sym]=bi
-			return '('+sym+')'+bi
+			return bi
 
 		elif re.search('[A-Za-z\_\.\$\:]+[0-9A-Za-z\_\.\$\:]*',sym) is not None:
 			bi = 'COUNT'
-			symbol_table[sym]=bi
+			symbol_table[sym]='('+sym+')'+bi
 			return '('+sym+')'+bi
 
 		else:
@@ -72,31 +69,7 @@ def symbol_lookup(sym,line_num,is_label,symbol_table):
 			dif = 16 - len(bi)
 			bi = '0'*dif+bi
 			symbol_table[sym]=bi
-			return '('+sym+')'+bi
-
-#------------------------------------------------------------------------------
-#This goes back an replaces the appropriate value in the input
-def search_replace(original,newline):
-	newline = newline.lstrip('s')
-	old_new = re.split(';',newline)
-	old=old_new[1]
-	old=old.strip('\n')
-	new=old_new[0]
-	
-	listOrig = re.split('\n+',original)
-
-	newOld=''
-
-	for line in listOrig:
-		if len(line)>0:
-			if line in old:
-				newOld+=new+'\n'
-
-			else:
-				newOld+=line+'\n'
-			
-	
-	return newOld
+			return bi
 
 #------------------------------------------------------------------------------
 #This goes through the line and replaces count with a number and updates table
@@ -199,6 +172,25 @@ out_file+='.hack'
 #Main
 #------------------------------------------------------------------------------
 IN=open(in_file)
+
+#builds the symbol table
+line_num=0
+for line in IN:
+	line = line.strip()
+
+	if re.search('^\@.*',line) is not None:
+		line = line.lstrip('@')
+		toWrite=symbol_lookup(line,line_num,False,symbol_table)
+		line_num+=1
+
+	elif re.search('^\(.*\)',line) is not None:
+		symbol_lookup(line,line_num,True,symbol_table)
+
+	elif re.search('^\/\/',line) is None and len(line) > 1:
+		line_num+=1
+
+IN.close
+IN=open(in_file)
 OUT=open(out_file,'w')
 
 toWrite=''
@@ -210,18 +202,11 @@ for line in IN:
 	if re.search('^\@.*',line) is not None:
 		line = line.lstrip('@')
 		toWrite+=symbol_lookup(line,line_num,False,symbol_table)
-		#if re.search('uc',toWrite) is not None:
-		#	temp = re.search('(uc)(.*)',toWrite)
-		#	toWrite = temp.group(2)
-		#	user_def_count+=1
-		#break up into a more useful structure
 		line_num+=1
 
 	elif re.search('^\(.*\)',line) is not None:
-		temp_s = symbol_lookup(line,line_num,True,symbol_table)
-		
-		if re.search('s.*\;.*',temp_s) is not None:
-			output = search_replace(output,temp_s)
+		#do nothing symbol_lookup(line,line_num,True,symbol_table)
+		temp_s=''
 
 	elif re.search('^\/\/',line) is None and len(line) > 1:
 		toWrite='111'
