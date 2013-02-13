@@ -37,44 +37,44 @@ def jump_lookup(jump):
 
 #------------------------------------------------------------------------------
 #looks up symbol if it isn't there adds it
-def symbol_lookup(sym,line_num,is_label,user_def):
-	temp_sym=sym.strip('(')
-	temp_sym=sym.strip(')')
-	if temp_sym in symbol_table:
+def symbol_lookup(sym,line_num,is_label,user_def,symbol_table):
+	sym=sym.strip('()')
+	if sym in symbol_table:
 		if is_label:
-			sym = sym.strip('(')
-			sym = sym.strip(')')
 			bi = bin(line_num)
-			bi = bi.strip('-0b')
-			dif = 15 - len(bi)
+			bi = bi.lstrip('-0b')
+			dif = 16 - len(bi)
 			bi = '0'*dif+bi
 			old=symbol_table[sym]
 			symbol_table[sym]=bi
 			return 's'+bi+';'+old
+
 		else:
-			return symbol_table[temp_sym]
+			return symbol_table[sym]
+
 	else:
 		if is_label:
-			sym = sym.strip('(')
-			sym = sym.strip(')')
 			bi = bin(line_num)
-			bi = bi.strip('-0b')
-			dif = 15 - len(bi)
+			bi = bi.lstrip('-0b')
+			dif = 16 - len(bi)
 			bi = '0'*dif+bi
 			symbol_table[sym]=bi
 			return bi
+
 		elif re.search('[A-Za-z\_\.\$\:]+[0-9]*[A-Za-z\_\.\$\:]*',sym) is not None:
 			bi = bin(user_def)
 			bi = bi.lstrip('-0b')
-			dif = 15 - len(bi)
+			dif = 16 - len(bi)
 			bi = '0'*dif+bi
 			symbol_table[sym]=bi
 			return 'uc'+bi
+
 		else:
 			bi = bin(int(sym))
 			bi = bi.lstrip('-0b')
-			dif = 15 - len(bi)
+			dif = 16 - len(bi)
 			bi = '0'*dif+bi
+			print('bi is '+bi+':'+sym)
 			symbol_table[sym]=bi
 			return 'uc'+bi
 
@@ -85,13 +85,17 @@ def search_replace(original,newline):
 	old_new = re.split(';',newline)
 	old=old_new[1]
 	newline=old_new[0]
+	
+	listOrig = re.split('\n+',original)
 
-	listOrig = re.split('\n',original)
 	newOld=''
+
 	for line in listOrig:
-		if line == old:
+
+		if line.find(old) > -1:
 			newOld+=newline+'\n'
-		else:
+
+		elif len(line)>0:
 			newOld+=line+'\n'
 
 	return newOld
@@ -113,10 +117,14 @@ dest_table={'null':'000','M':'001','D':'010','MD':'011','A':'100','AM':'101',
 jump_table={'null':'000','JGT':'001','JEQ':'010','JGE':'011','JLT':'100',
 			'JNE':'101','JLE':'110','JMP':'111'}
 
-symbol_table={'SP':'0','LCL':'1','ARG':'2','THIS':'3','THAT':'4',
-			 'R0':'0','R1':'1','R2':'2','R3':'3','R4':'4','R5':'5','R6':'6',
-			 'R7':'7','R8':'8','R9':'9','R10':'10','R11':'11','R12':'12',
-			 'R13':'13','R14':'14','R15':'15','SCREEN':'16384','KBD':'24576'}
+symbol_table={'SP':'0000000000000000','LCL':'0000000000000001','ARG':'0000000000000010',
+			'THIS':'0000000000000011','THAT':'0000000000000100','R0':'0000000000000000',
+			'R1':'0000000000000001','R2':'0000000000000010','R3':'0000000000000011',
+			'R4':'0000000000000100','R5':'0000000000000101','R6':'0000000000000110',
+			'R7':'0000000000000111','R8':'0000000000001000','R9':'0000000000001001',
+			'R10':'0000000000001010','R11':'0000000000001011','R12':'0000000000001100',
+			'R13':'0000000000001101','R14':'0000000000001110','R15':'0000000000001111',
+			'SCREEN':'0100000000000000','KBD':'0110000000000000'}
 
 user_def_count=16
 
@@ -153,9 +161,8 @@ for line in IN:
 	line = line.strip()
 
 	if re.search('^\@.*',line) is not None:
-		toWrite+='0'
-		line = line.strip('@')
-		toWrite+=symbol_lookup(line,line_num,False,user_def_count)
+		line = line.lstrip('@')
+		toWrite+=symbol_lookup(line,line_num,False,user_def_count,symbol_table)
 		if re.search('uc',toWrite) is not None:
 			temp = re.search('(.*)(uc)(.*)',toWrite)
 			toWrite = temp.group(1)+temp.group(3)
@@ -164,14 +171,16 @@ for line in IN:
 		line_num+=1
 
 	elif re.search('^\(.*\)',line) is not None:
-		temp_s = symbol_lookup(line,line_num,True,user_def_count)
+		temp_s = symbol_lookup(line,line_num,True,user_def_count,symbol_table)
+		
 		if re.search('s.*\;.*',temp_s) is not None:
 			output = search_replace(output,temp_s)
+			print('temp_s is '+temp_s+':'+line)
+			
 		if re.search('uc',temp_s) is not None:
 			temp = re.search('(.*)(uc)(.*)',temp_s)
 			toWrite += temp.group(1)+temp.group(3)
 			user_def_count+=1
-		line_num+=1
 
 	elif re.search('^\/\/',line) is None and len(line) > 1:
 		toWrite='111'
@@ -179,8 +188,7 @@ for line in IN:
 		if re.search('.*\/\/.*',line) is not None:
 			temp_line = re.search('(.*)(\/\/.*)',line)
 			line=temp_line.group(1)
-			line.strip()
-			print('here')
+			line=line.strip()
 
 		if re.search('=.*M.*',line) is None:
 			toWrite+='0'
