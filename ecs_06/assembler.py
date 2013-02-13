@@ -2,7 +2,7 @@ import sys, string, os, io,re
 #Chris Card
 #CS410
 #Python02
-#due:2/6/13
+#due:2/25/13
 
 #------------------------------------------------------------------------------
 #DEF sub routines
@@ -10,29 +10,29 @@ import sys, string, os, io,re
 
 #------------------------------------------------------------------------------
 #Looks up comp in comp_table if it isn't there reports error and exits
-def comp_lookup(comp):
+def comp_lookup(comp,line):
 	if comp in comp_table:
 		return comp_table[comp]
 	else:
-		print('Unrecognized command '+comp+' !')
+		print('Unrecognized command '+comp+' on line: '+repr(line)+' !')
 		sys.exit(0)
 
 #------------------------------------------------------------------------------
 #Looks up dest in dest_table if it isn't there reports error and exits
-def dest_lookup(dest):
+def dest_lookup(dest,line):
 	if dest in dest_table:
 		return dest_table[dest]
 	else:
-		print('Unrecognized destination '+dest+' !')
+		print('Unrecognized destination '+dest+' on line: '+repr(line)+' !')
 		sys.exit(0)
 
 #------------------------------------------------------------------------------
 #This looks up jump commands and returns the appropriate bit sequence
-def jump_lookup(jump):
+def jump_lookup(jump,line):
 	if jump in jump_table:
 		return jump_table[jump]
 	else:
-		print('Unrecognized jump'+jump+' !')
+		print('Unrecognized jump'+jump+' on line: '+repr(line)+' !')
 		sys.exit(0)
 
 #------------------------------------------------------------------------------
@@ -94,7 +94,6 @@ def user_def_replace(out,symbol_table,user_def):
 					bi = '0'*dif+bi
 					symbol_table[temp]=bi
 					newout+='('+temp+')'+bi+'\n'
-					print(temp+':'+repr(user_def))
 					user_def+=1
 				else:
 					newout+=temp_s+'\n'
@@ -198,6 +197,7 @@ OUT=open(out_file,'w')
 toWrite=''
 output=''
 line_num=0
+overall_line_num=0
 #builds the output
 for line in IN:
 	line = line.strip()
@@ -230,33 +230,35 @@ for line in IN:
 		if re.search('\=',line) is None:
 			#if there is a jump involved
 			if re.search(';',line) is None:
-				toWrite+=comp_lookup(line)
-				toWrite+=dest_lookup('null')
-				toWrite+=jump_lookup('null')
+				toWrite+=comp_lookup(line,overall_line_num)
+				toWrite+=dest_lookup('null',overall_line_num)
+				toWrite+=jump_lookup('null',overall_line_num)
 			else:
 				temp_jump = re.search('(.*)(;)(.*)',line)
-				toWrite+=comp_lookup(temp_jump.group(1))
-				toWrite+=dest_lookup('null')
-				toWrite+=jump_lookup(temp_jump.group(3))
+				toWrite+=comp_lookup(temp_jump.group(1),overall_line_num)
+				toWrite+=dest_lookup('null',overall_line_num)
+				toWrite+=jump_lookup(temp_jump.group(3),overall_line_num)
 		else:
 			#if there is a jump involved
 			if re.search(';',line) is None:
 				temp_dest=re.search('(.*)(\=)(.*)',line)
-				toWrite+=comp_lookup(temp_dest.group(3))
-				toWrite+=dest_lookup(temp_dest.group(1))
-				toWrite+=jump_lookup('null')
+				toWrite+=comp_lookup(temp_dest.group(3),overall_line_num)
+				toWrite+=dest_lookup(temp_dest.group(1),overall_line_num)
+				toWrite+=jump_lookup('null',overall_line_num)
 			else:
 				temp_dest = re.search('(.*)(\=)(.*)(;)(.*)',line)
-				toWrite+=comp_lookup(temp_dest.group(3))
-				toWrite+=dest_lookup(temp_dest.group(1))
-				toWrite+=jump_lookup(temp_dest.group(5))
+				toWrite+=comp_lookup(temp_dest.group(3),overall_line_num)
+				toWrite+=dest_lookup(temp_dest.group(1),overall_line_num)
+				toWrite+=jump_lookup(temp_dest.group(5),overall_line_num)
+		
 		line_num+=1
 	
+	overall_line_num+=1
+
 	if len(toWrite) > 0:
 		output+=toWrite+'\n'
 		toWrite=''
 #End for loop
-print(line_num)
 
 IN.close()
 output = user_def_replace(output,symbol_table,user_def_count)
