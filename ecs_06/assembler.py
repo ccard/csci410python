@@ -37,7 +37,7 @@ def jump_lookup(jump):
 
 #------------------------------------------------------------------------------
 #looks up symbol if it isn't there adds it
-def symbol_lookup(sym,line_num,is_label,user_def,symbol_table):
+def symbol_lookup(sym,line_num,is_label,symbol_table):
 	sym=sym.strip('()')
 	if sym in symbol_table:
 		if is_label:
@@ -62,12 +62,9 @@ def symbol_lookup(sym,line_num,is_label,user_def,symbol_table):
 			return '('+sym+')'+bi
 
 		elif re.search('[A-Za-z\_\.\$\:]+[0-9A-Za-z\_\.\$\:]*',sym) is not None:
-			bi = bin(user_def)
-			bi = bi.lstrip('-0b')
-			dif = 16 - len(bi)
-			bi = '0'*dif+bi
+			bi = 'COUNT'
 			symbol_table[sym]=bi
-			return 'uc'+'('+sym+')'+bi
+			return '('+sym+')'+bi
 
 		else:
 			bi = bin(int(sym))
@@ -93,8 +90,6 @@ def search_replace(original,newline):
 	for line in listOrig:
 		if len(line)>0:
 			if line in old:
-				if 'ponggame'in old:
-					print(new+':'+line)
 				newOld+=new+'\n'
 
 			else:
@@ -102,6 +97,33 @@ def search_replace(original,newline):
 			
 	
 	return newOld
+
+#------------------------------------------------------------------------------
+#This goes through the line and replaces count with a number and updates table
+def user_def_replace(out,symbol_table,user_def):
+	original = re.split('\n+',out)
+	newout=''
+
+	for line in original:
+		if len(line) > 0:
+			if re.search('^\(.*\)COUNT',line) is not None:
+				temp_sym = re.search('(^\(.*\))(COUNT)',line)
+				temp_s = symbol_lookup(temp_sym.group(1),user_def,False,symbol_table)
+				if re.search('^\(.*\)COUNT',temp_s) is not None:
+					temp = temp_sym.group(1).strip('()')
+					bi = bin(user_def)
+					bi = bi.lstrip('-0b')
+					dif = 16-len(bi)
+					bi = '0'*dif+bi
+					symbol_table[temp]=bi
+					newout+='('+temp+')'+bi+'\n'
+					print(temp+':'+repr(user_def))
+					user_def+=1
+				else:
+					newout+=temp_s+'\n'
+			else:
+				newout+=line+'\n'
+	return newout
 
 #------------------------------------------------------------------------------
 #cleans the output of (sym)
@@ -181,20 +203,19 @@ for line in IN:
 
 	if re.search('^\@.*',line) is not None:
 		line = line.lstrip('@')
-		toWrite+=symbol_lookup(line,line_num,False,user_def_count,symbol_table)
-		if re.search('uc',toWrite) is not None:
-			temp = re.search('(uc)(.*)',toWrite)
-			toWrite = temp.group(2)
-			user_def_count+=1
+		toWrite+=symbol_lookup(line,line_num,False,symbol_table)
+		#if re.search('uc',toWrite) is not None:
+		#	temp = re.search('(uc)(.*)',toWrite)
+		#	toWrite = temp.group(2)
+		#	user_def_count+=1
 		
 		line_num+=1
 
 	elif re.search('^\(.*\)',line) is not None:
-		temp_s = symbol_lookup(line,line_num,True,user_def_count,symbol_table)
+		temp_s = symbol_lookup(line,line_num,True,symbol_table)
 		
 		if re.search('s.*\;.*',temp_s) is not None:
 			output = search_replace(output,temp_s)
-			user_def_count-=1
 
 	elif re.search('^\/\/',line) is None and len(line) > 1:
 		toWrite='111'
@@ -239,6 +260,7 @@ for line in IN:
 print(line_num)
 
 IN.close()
+output = user_def_replace(output,symbol_table,user_def_count)
 output = clean_out(output)
 OUT.write(output)
 OUT.close()
