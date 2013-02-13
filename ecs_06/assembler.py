@@ -214,7 +214,7 @@ for line in IN:
 		#	temp = re.search('(uc)(.*)',toWrite)
 		#	toWrite = temp.group(2)
 		#	user_def_count+=1
-		
+		#break up into a more useful structure
 		line_num+=1
 
 	elif re.search('^\(.*\)',line) is not None:
