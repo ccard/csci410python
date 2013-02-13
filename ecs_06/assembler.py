@@ -41,10 +41,10 @@ def symbol_lookup(sym,line_num,is_label,symbol_table):
 	sym=sym.strip('()')
 	if sym in symbol_table:
 		if is_label:
-			bi = bin(line_num)
-			bi = bi.lstrip('-0b')
-			dif = 16 - len(bi)
-			bi = '0'*dif+bi
+			bi = bin(line_num) #converts to binary
+			bi = bi.lstrip('-0b') #strips -0b of the front
+			dif = 16 - len(bi) #calcs number of high order 0's need to make 16bit
+			bi = '0'*dif+bi #pads with high order 0's
 			symbol_table[sym]=bi
 
 		return symbol_table[sym]
@@ -59,7 +59,7 @@ def symbol_lookup(sym,line_num,is_label,symbol_table):
 			return bi
 
 		elif re.search('[A-Za-z\_\.\$\:]+[0-9A-Za-z\_\.\$\:]*',sym) is not None:
-			bi = 'COUNT'
+			bi = 'COUNT' #user def vars 
 			symbol_table[sym]='('+sym+')'+bi
 			return '('+sym+')'+bi
 
@@ -72,19 +72,23 @@ def symbol_lookup(sym,line_num,is_label,symbol_table):
 			return bi
 
 #------------------------------------------------------------------------------
-#This goes through the line and replaces count with a number and updates table
+#This goes through the line and replaces (sym)count with a number and updates table
 def user_def_replace(out,symbol_table,user_def):
 	original = re.split('\n+',out)
+	
 	newout=''
+	#count for assigning registars to user def vars
 	repeat = 0
 
 	for line in original:
-		if len(line) > 0:
+		if len(line) > 0: #ensures that the line is not empty
 			if re.search('^\(.*\)COUNT',line) is not None:
 				temp_sym = re.search('(^\(.*\))(COUNT)',line)
+				#stips symbol out to look up in symbole table
 				temp_s = symbol_lookup(temp_sym.group(1),user_def,False,symbol_table)
-
+				#if the returned output contains count
 				if re.search('^\(.*\)COUNT',temp_s) is not None:
+					#updates the table with the newly assigned registar
 					temp = temp_sym.group(1).strip('()')
 					bi = bin(user_def)
 					bi = bi.lstrip('-0b')
@@ -112,6 +116,7 @@ def clean_out(to_clean):
 	newOld=''
 
 	for line in listOrig:
+		#if it finds (symbol) at the start of line
 		if re.search('^\(.*\).*',line) is not None:
 			temp = re.search('(^\(.*\))(.*)',line)
 			newOld+=temp.group(2)+'\n'
@@ -154,18 +159,20 @@ out_file=''
 #------------------------------------------------------------------------------
 #Check user input
 #------------------------------------------------------------------------------
-if len(sys.argv) < 2:
+if len(sys.argv) < 2: #checks to see if user put in file
 	print('incorrect number of args!')
 	print('assembler.py <file.asm>')
 	sys.exit(0)
 
 in_file=sys.argv[1]
 
+#checks for correct file name
 if re.search('.*\.asm',in_file) == None:
 	print('incorrect file name!')
 	sys.exit(0)
 
-out_file=in_file.strip('.asm')
+#strips asm of the end and adds hack
+out_file=in_file.rstrip('.asm')
 out_file+='.hack'
 
 #------------------------------------------------------------------------------
@@ -188,6 +195,7 @@ for line in IN:
 
 	elif re.search('^\/\/',line) is None and len(line) > 1:
 		line_num+=1
+#end for loop
 
 IN.close
 IN=open(in_file)
@@ -196,6 +204,7 @@ OUT=open(out_file,'w')
 toWrite=''
 output=''
 line_num=0
+#builds the output
 for line in IN:
 	line = line.strip()
 
@@ -205,23 +214,27 @@ for line in IN:
 		line_num+=1
 
 	elif re.search('^\(.*\)',line) is not None:
-		#do nothing symbol_lookup(line,line_num,True,symbol_table)
-		temp_s=''
+		temp_s='This is here to ensure that labels don`t get printed to output'
 
 	elif re.search('^\/\/',line) is None and len(line) > 1:
-		toWrite='111'
+		toWrite='111' #command begining
 		
+		#if there is a comment in middle or end of line
 		if re.search('.*\/\/.*',line) is not None:
+			#strips comment off
 			temp_line = re.search('(.*)(\/\/.*)',line)
 			line=temp_line.group(1)
 			line=line.strip()
 
+		#if m is involved in the computation sets a to 1
 		if re.search('=.*M.*',line) is None:
 			toWrite+='0'
 		else:
 			toWrite+='1'
 
+		#if there is a destination involved
 		if re.search('\=',line) is None:
+			#if there is a jump involved
 			if re.search(';',line) is None:
 				toWrite+=comp_lookup(line)
 				toWrite+=dest_lookup('null')
@@ -232,6 +245,7 @@ for line in IN:
 				toWrite+=dest_lookup('null')
 				toWrite+=jump_lookup(temp_jump.group(3))
 		else:
+			#if there is a jump involved
 			if re.search(';',line) is None:
 				temp_dest=re.search('(.*)(\=)(.*)',line)
 				toWrite+=comp_lookup(temp_dest.group(3))
