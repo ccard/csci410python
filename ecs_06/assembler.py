@@ -47,7 +47,8 @@ def symbol_lookup(sym,line_num,is_label,user_def,symbol_table):
 			bi = '0'*dif+bi
 			old=symbol_table[sym]
 			symbol_table[sym]=bi
-			return 's'+bi+';'+old
+			print(sym+':'+repr(line_num)+':'+bi+':'+old)
+			return 's'+'('+sym+')'+bi+';'+'('+sym+')'+old
 
 		else:
 			return symbol_table[sym]
@@ -59,7 +60,7 @@ def symbol_lookup(sym,line_num,is_label,user_def,symbol_table):
 			dif = 16 - len(bi)
 			bi = '0'*dif+bi
 			symbol_table[sym]=bi
-			return bi
+			return '('+sym+')'+bi
 
 		elif re.search('[A-Za-z\_\.\$\:]+[0-9]*[A-Za-z\_\.\$\:]*',sym) is not None:
 			bi = bin(user_def)
@@ -74,14 +75,13 @@ def symbol_lookup(sym,line_num,is_label,user_def,symbol_table):
 			bi = bi.lstrip('-0b')
 			dif = 16 - len(bi)
 			bi = '0'*dif+bi
-			print('bi is '+bi+':'+sym)
 			symbol_table[sym]=bi
-			return 'uc'+bi
+			return bi
 
 #------------------------------------------------------------------------------
 #This goes back an replaces the appropriate value in the input
 def search_replace(original,newline):
-	newline = newline.strip('s')
+	newline = newline.lstrip('s')
 	old_new = re.split(';',newline)
 	old=old_new[1]
 	newline=old_new[0]
@@ -93,11 +93,29 @@ def search_replace(original,newline):
 	for line in listOrig:
 
 		if line.find(old) > -1:
+			print(old+':'+newline)
 			newOld+=newline+'\n'
 
 		elif len(line)>0:
+			print(old+'old'+'new'+newline)
 			newOld+=line+'\n'
 
+	return newOld
+
+#------------------------------------------------------------------------------
+#cleans the output of (sym)
+def clean_out(to_clean):
+	listOrig = re.split('\n+',to_clean)
+
+	newOld=''
+
+	for line in listOrig:
+		if re.search('^\(.*\).*',line) is not None:
+			temp = re.search('(^\(.*\))(.*)',line)
+			newOld+=temp.group(2)+'\n'
+		else:
+			newOld+=line+'\n'
+	newOld = newOld.strip('\n')
 	return newOld
 
 #------------------------------------------------------------------------------
@@ -172,10 +190,9 @@ for line in IN:
 
 	elif re.search('^\(.*\)',line) is not None:
 		temp_s = symbol_lookup(line,line_num,True,user_def_count,symbol_table)
-		
+		print(temp_s)
 		if re.search('s.*\;.*',temp_s) is not None:
 			output = search_replace(output,temp_s)
-			print('temp_s is '+temp_s+':'+line)
 			
 		if re.search('uc',temp_s) is not None:
 			temp = re.search('(.*)(uc)(.*)',temp_s)
@@ -222,9 +239,10 @@ for line in IN:
 		output+=toWrite+'\n'
 		toWrite=''
 #End for loop
+print(line_num)
 
 IN.close()
-
+output = clean_out(output)
 OUT.write(output)
 OUT.close()
 
