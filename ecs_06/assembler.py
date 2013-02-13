@@ -59,7 +59,7 @@ def symbol_lookup(sym,line_num,is_label,user_def,symbol_table):
 			dif = 16 - len(bi)
 			bi = '0'*dif+bi
 			symbol_table[sym]=bi
-			return '('+sym+')'+bi
+			return ''
 
 		elif re.search('[A-Za-z\_\.\$\:]+[0-9]*[A-Za-z\_\.\$\:]*',sym) is not None:
 			bi = bin(user_def)
