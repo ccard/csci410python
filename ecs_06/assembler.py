@@ -26,7 +26,7 @@ def dest_lookup(dest,line,extend_dest):
 	if dest in dest_table:
 		return dest_table[dest]
 	else:
-		#if we are to look in the extended_dest_table
+		#If we are to look in the extended_dest_table
 		if extend_dest:
 			if dest in extended_dest_table:
 				return extended_dest_table[dest]
@@ -49,10 +49,10 @@ def symbol_lookup(sym,line_num,is_label,symbol_table):
 	sym=sym.strip('()')
 	if sym in symbol_table:
 		if is_label:
-			bi = bin(line_num) #converts to binary
-			bi = bi.lstrip('-0b') #strips -0b of the front
-			dif = 16 - len(bi) #calcs number of high order 0's need to make 16bit
-			bi = '0'*dif+bi #pads with high order 0's
+			bi = bin(line_num) #Converts to binary
+			bi = bi.lstrip('-0b') #Strips -0b of the front
+			dif = 16 - len(bi) #Calcs number of high order 0's need to make 16bit
+			bi = '0'*dif+bi #Pads with high order 0's
 			symbol_table[sym]=bi
 
 		return symbol_table[sym]
@@ -66,13 +66,13 @@ def symbol_lookup(sym,line_num,is_label,symbol_table):
 			symbol_table[sym]=bi
 			return bi
 
-		#user defind variable
+		#User defind variable
 		elif re.search('[A-Za-z\_\.\$\:]+[0-9A-Za-z\_\.\$\:]*',sym) is not None:
 			bi = 'COUNT' #user def vars 
 			symbol_table[sym]='('+sym+')'+bi
 			return '('+sym+')'+bi
 
-		else: #explicitly defined variable
+		else: #Explicitly defined variable
 			bi = bin(int(sym))
 			bi = bi.lstrip('-0b')
 			dif = 16 - len(bi)
@@ -89,14 +89,14 @@ def user_def_replace(out,symbol_table,user_def):
 	newout=''
 
 	for line in original:
-		if len(line) > 0: #ensures that the line is not empty
+		if len(line) > 0: #Ensures that the line is not empty
 			if re.search('^\(.*\)COUNT',line) is not None:
 				temp_sym = re.search('(^\(.*\))(COUNT)',line)
-				#stips symbol out to look up in symbole table
+				#Stips symbol out to look up in symbole table
 				temp_s = symbol_lookup(temp_sym.group(1),user_def,False,symbol_table)
-				#if the returned output contains count
+				#If the returned output contains count
 				if re.search('^\(.*\)COUNT',temp_s) is not None:
-					#updates the table with the newly assigned registar
+					#Updates the table with the newly assigned registar
 					temp = temp_sym.group(1).strip('()')
 					bi = bin(user_def)
 					bi = bi.lstrip('-0b')
@@ -121,7 +121,7 @@ def clean_out(to_clean):
 	newOld=''
 
 	for line in listOrig:
-		#if it finds (symbol) at the start of line
+		#If it finds (symbol) at the start of line
 		if re.search('^\(.*\).*',line) is not None:
 			temp = re.search('(^\(.*\))(.*)',line)
 			newOld+=temp.group(2)+'\n'
@@ -171,7 +171,7 @@ out_file=''
 #------------------------------------------------------------------------------
 # Check user input
 #------------------------------------------------------------------------------
-if len(sys.argv) < 2: #checks to see if user put in file
+if len(sys.argv) < 2: #Checks to see if user put in file
 	print('incorrect number of args!')
 	print('assembler.py <file.asm> <-x(optional extended mode)>')
 	sys.exit(0)
