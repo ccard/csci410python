@@ -20,11 +20,17 @@ def comp_lookup(comp,line):
 		sys.exit(0)
 
 #------------------------------------------------------------------------------
-# Looks up dest in dest_table if it isn't there reports error and exits
-def dest_lookup(dest,line):
+# Looks up dest in dest_table(or extended_dest_table) if it isn't there reports
+# error and exits
+def dest_lookup(dest,line,extend_dest):
 	if dest in dest_table:
 		return dest_table[dest]
 	else:
+		#if we are to look in the extended_dest_table
+		if extend_dest:
+			if dest in extended_dest_table:
+				return extended_dest_table[dest]
+
 		print('Unrecognized destination '+dest+' on line: '+repr(line)+' !')
 		sys.exit(0)
 
@@ -140,6 +146,9 @@ comp_table={'0':'101010','1':'111111','-1':'111010','D':'001100',
 dest_table={'null':'000','M':'001','D':'010','MD':'011','A':'100','AM':'101',
 			'AD':'110','AMD':'111'}
 
+extended_dest_table={'DM':'011','MA':'101','DA':'110','MDA':'111','DAM':'111',
+					'MAD':'111','DMA':'111','ADM':'111'}
+
 jump_table={'null':'000','JGT':'001','JEQ':'010','JGE':'011','JLT':'100',
 			'JNE':'101','JLE':'110','JMP':'111'}
 
@@ -164,23 +173,23 @@ out_file=''
 #------------------------------------------------------------------------------
 if len(sys.argv) < 2: #checks to see if user put in file
 	print('incorrect number of args!')
-	print('assembler.py <file.asm> <option(optional)>')
+	print('assembler.py <file.asm> <-x(optional extended mode)>')
 	sys.exit(0)
 
 in_file=sys.argv[1]
 
-#checks for correct file name
+#Checks for correct file name
 if re.search('.*\.asm',in_file) == None:
 	print('incorrect file name!')
 	sys.exit(0)
 
-#if user passed in option
+#If user passed in option to allow extra functionality
 if len(sys.argv) == 3:
 	temp_op=sys.argv[2]
 	if '-x' in temp_op:
 		extended_op=True
 
-#strips .asm of the end and adds .hack
+#Strips .asm of the end and adds .hack
 temp_out=re.search('(.*)(\.asm)',in_file)
 out_file+=temp_out.group(1)+'.hack'
 
@@ -199,17 +208,17 @@ for line in IN:
 		toWrite=symbol_lookup(line,line_num,False,symbol_table)
 		line_num+=1
 
-	#user deffined label	
+	#User deffined variable
 	elif re.search('^\(.*\)[0-9]+',line) is not None and extended_op:
 		temp_udef = re.search('(^\(.*\))([0-9]+)',line)
 		symbol_lookup(temp_udef.group(1),int(temp_udef.group(2)),True,symbol_table)
 		line_num+=1
 
-	#if label
+	#If label
 	elif re.search('^\(.*\)',line) is not None:
 		symbol_lookup(line,line_num,True,symbol_table)
 
-	#if line is a command and not empty
+	#If line is a command and not empty
 	elif re.search('^\/\/',line) is None and len(line) > 1:
 		line_num+=1
 #End for loop
@@ -220,9 +229,9 @@ OUT=open(out_file,'w')
 
 toWrite=''
 output=''
-#keeps track of line number as far as .hack file is concerned
+#Keeps track of line number as far as .hack file is concerned
 line_num=0
-#keeps count for general error reporting
+#Keeps count for general error reporting
 overall_line_num=0
 
 #Builds the output
@@ -234,50 +243,50 @@ for line in IN:
 		toWrite+=symbol_lookup(line,line_num,False,symbol_table)
 		line_num+=1
 
-	#if the line is a label then we just want to ensure that it
+	#If the line is a label then we just want to ensure that it
 	#doesn't get read in as a command and cause an error
 	elif re.search('^\(.*\)',line) is not None:
 		temp_s='This is here to ensure that labels don`t get printed to output'
 
 	elif re.search('^\/\/',line) is None and len(line) > 1:
-		toWrite='111' #command begining
+		toWrite='111' #Begining of c instruction
 		
-		#if there is a comment at end of line
+		#If there is a comment at end of line
 		if re.search('.*\/\/.*',line) is not None:
-			#strips comment off
+			#Strips comment off
 			temp_line = re.search('(.*)(\/\/.*)',line)
 			line=temp_line.group(1)
 			line=line.strip()
 
-		#if m is involved in the computation sets a to 1
+		#If m is involved in the computation sets a to 1
 		if re.search('=.*M.*',line) is None:
 			toWrite+='0'
 		else:
 			toWrite+='1'
 
-		#if there is a destination involved
+		#If there is a destination involved
 		if re.search('\=',line) is None:
-			#if there is a jump involved
+			#If there is a jump involved
 			if re.search(';',line) is None:
 				toWrite+=comp_lookup(line,overall_line_num)
-				toWrite+=dest_lookup('null',overall_line_num)
+				toWrite+=dest_lookup('null',overall_line_num,extended_op)
 				toWrite+=jump_lookup('null',overall_line_num)
 			else:
 				temp_jump = re.search('(.*)(;)(.*)',line)
 				toWrite+=comp_lookup(temp_jump.group(1),overall_line_num)
-				toWrite+=dest_lookup('null',overall_line_num)
+				toWrite+=dest_lookup('null',overall_line_num,extended_op)
 				toWrite+=jump_lookup(temp_jump.group(3),overall_line_num)
 		else:
-			#if there is a jump involved
+			#If there is a jump involved
 			if re.search(';',line) is None:
 				temp_dest=re.search('(.*)(\=)(.*)',line)
 				toWrite+=comp_lookup(temp_dest.group(3),overall_line_num)
-				toWrite+=dest_lookup(temp_dest.group(1),overall_line_num)
+				toWrite+=dest_lookup(temp_dest.group(1),overall_line_num,extended_op)
 				toWrite+=jump_lookup('null',overall_line_num)
 			else:
 				temp_dest = re.search('(.*)(\=)(.*)(;)(.*)',line)
 				toWrite+=comp_lookup(temp_dest.group(3),overall_line_num)
-				toWrite+=dest_lookup(temp_dest.group(1),overall_line_num)
+				toWrite+=dest_lookup(temp_dest.group(1),overall_line_num,extended_op)
 				toWrite+=jump_lookup(temp_dest.group(5),overall_line_num)
 		
 		line_num+=1
