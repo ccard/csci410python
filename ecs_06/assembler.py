@@ -154,6 +154,8 @@ symbol_table={'SP':'0000000000000000','LCL':'0000000000000001','ARG':'0000000000
 
 user_def_count=16
 
+extended_op=False
+
 in_file=''
 out_file=''
 
@@ -162,7 +164,7 @@ out_file=''
 #------------------------------------------------------------------------------
 if len(sys.argv) < 2: #checks to see if user put in file
 	print('incorrect number of args!')
-	print('assembler.py <file.asm>')
+	print('assembler.py <file.asm> <option(optional)>')
 	sys.exit(0)
 
 in_file=sys.argv[1]
@@ -171,6 +173,12 @@ in_file=sys.argv[1]
 if re.search('.*\.asm',in_file) == None:
 	print('incorrect file name!')
 	sys.exit(0)
+
+#if user passed in option
+if len(sys.argv) == 3:
+	temp_op=sys.argv[2]
+	if '-x' in temp_op:
+		extended_op=True
 
 #strips .asm of the end and adds .hack
 temp_out=re.search('(.*)(\.asm)',in_file)
@@ -190,9 +198,17 @@ for line in IN:
 		line = line.lstrip('@')
 		toWrite=symbol_lookup(line,line_num,False,symbol_table)
 		line_num+=1
+
+	#user deffined label	
+	elif re.search('^\(.*\)[0-9]+',line) is not None and extended_op:
+		temp_udef = re.search('(^\(.*\))([0-9]+)',line)
+		symbol_lookup(temp_udef.group(1),int(temp_udef.group(2)),True,symbol_table)
+		line_num+=1
+
 	#if label
 	elif re.search('^\(.*\)',line) is not None:
 		symbol_lookup(line,line_num,True,symbol_table)
+
 	#if line is a command and not empty
 	elif re.search('^\/\/',line) is None and len(line) > 1:
 		line_num+=1
