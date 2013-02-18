@@ -25,9 +25,9 @@ def user_def_replace(out,user_def):
 		if len(line) > 0: #Ensures that the line is not empty
 			if re.search('^\(.+\).*',line) is not None:
 				temp_sym = re.search('(^\(.*\))(.*)',line)
-				#Updates the table with the newly assigned registar
 				temp = temp_sym.group(1).strip('()')
 				if re.search('\(.*\).*',symT.getAddress(temp)) is not None:
+					#Updates the table with the newly assigned registar
 					symT.addEntry(temp,user_def,False)
 					newout+='('+temp+')'+symT.getAddress(temp)+'\n'
 					user_def+=1
@@ -104,12 +104,15 @@ symT = SymbolTable()
 while par.hasMoreCommands():
 	par.advance()
 	cType = par.commandType()
+	#if the command type is a label
 	if re.search('L_COMMAND',cType) is not None:
 		temp_L = re.search('(.*)(;)(.*)',par.symbol())
 		symT.addEntry(temp_L.group(1),int(temp_L.group(3)),False)
 
+	#if it is an adddress type command
 	elif re.search('A_COMMAND',cType) is not None:
 		if not symT.contains(par.symbol()):
+			#explicitly defind address
 			if re.search('^[0-9]+',par.symbol()) is not None:
 				symT.addEntry(par.symbol(),int(par.symbol()),False)
 			else:

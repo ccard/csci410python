@@ -65,21 +65,28 @@ class Parser:
 	#--------------------------------------------------------------------------
 	# Advance parser to next line
 	def advance(self):
+		#Ensures that if it is invalid symbol or
+		#command it will cause an error when trying to look it up
 		self.cType='null'
 		self.sym='null'
 		self.dest_='null'
 		self.jump_='null'
 		self.comp_='null'
+
+		#checks for EOF
 		temp = self.infile.tell()
 		self.line = self.infile.readline()
 		if temp == self.infile.tell():
 			self.infile.close()
 			self.neOf=False
 			return
+
 		self.line = self.line.strip()
 
+		#a type command
 		if re.search('^\@.*',self.line) is not None:
 			self.line = self.line.lstrip('@')
+			#checks for invalid symbol or label
 			if re.search('^[0-9]+[A-Za-z\_\.\$\:]+',self.line) is not None:
 				print('invalide label or symbol '+self.line+' at approx line '+
 					repr(self.line_num))
