@@ -3,7 +3,7 @@ import sys, string, os, io,re
 #Chris Card
 #CS410
 #ECS project 06
-#Due:2/25/13
+#Due:3/4/13
 #------------------------------------------------------------------------------
 
 class Parser:
@@ -12,18 +12,23 @@ class Parser:
 	extend_op=False
 
 	#Constance
-	a_type='A_COMMAND'
-	c_type='C_COMMAND'
-	l_type='L_COMMAND'
+	arith_type='C_ARITHMETIC'
+	push_type='C_PUSH'
+	pop_type='C_POP'
+	lable_type='C_LABEL'
+	goto_type='C_GOTO'
+	if_type='C_IF'
+	funct_type='C_FUNCTION'
+	ret_type='C_RETURN'
+	call_type='C_CALL'
 
 	#File parsing parameters
 	line=''
 	line_num=0
 	cType=''
-	sym=''
-	dest_=''
-	jump_=''
-	comp_=''
+	arg1=''
+	arg2=''
+	
 	neOf=True
 
 
@@ -44,23 +49,13 @@ class Parser:
 
 	#--------------------------------------------------------------------------
 	# returns the symbol
-	def symbol(self):
-		return self.sym
+	def arg_1(self):
+		return self.arg1
 
 	#--------------------------------------------------------------------------
 	# returns the command
-	def comp(self):
-		return self.comp_
-
-	#--------------------------------------------------------------------------
-	#returns destination
-	def dest(self):
-		return self.dest_
-
-	#--------------------------------------------------------------------------
-	#returns the jump
-	def jump(self):
-		return self.jump_
+	def arg_2(self):
+		return self.arg2
 
 	#--------------------------------------------------------------------------
 	# Advance parser to next line
@@ -68,10 +63,8 @@ class Parser:
 		#Ensures that if it is invalid symbol or
 		#command it will cause an error when trying to look it up
 		self.cType='null'
-		self.sym='null'
-		self.dest_='null'
-		self.jump_='null'
-		self.comp_='null'
+		self.arg1='null'
+		self.arg2='null'
 
 		#checks for EOF
 		temp = self.infile.tell()
@@ -83,59 +76,63 @@ class Parser:
 
 		self.line = self.line.strip()
 
-		#a type command
-		if re.search('^\@.*',self.line) is not None:
-			self.line = self.line.lstrip('@')
-			#checks for invalid symbol or label
-			if re.search('^[0-9]+[A-Za-z\_\.\$\:]+',self.line) is not None:
-				print('invalide label or symbol '+self.line+' at approx line '+
-					repr(self.line_num))
-				sys.exit(0)
-
-			self.cType=self.a_type
-			self.sym = self.line
-			self.line_num+=1
-	
-		#User deffined variable
-		elif re.search('^\(.*\)[0-9]+',self.line) is not None and self.extend_op:
-			temp_udef = re.search('(^\(.*\))([0-9]+)',self.line)
-			self.cType=self.l_type
-			self.sym=temp_udef.group(1)+';'+temp_udef.group(2)
-			self.line_num+=1
-	
-		#If label
-		elif re.search('^\(.*\)',self.line) is not None:
-			self.cType=self.l_type
-			self.sym=self.line+';'+repr(self.line_num)
-	
-		#If line is a command and not empty
-		elif re.search('^\/\/',self.line) is None and len(self.line) > 1:
-			#If there is a comment at end of line
-			if re.search('.*\/\/.*',self.line) is not None:
-				#Strips comment off
-				temp_line = re.search('(.*)(\/\/.*)',self.line)
-				self.line=temp_line.group(1)
-				self.line=self.line.strip()
-
-			self.cType=self.c_type
-			#If there is a destination involved
-			if re.search('\=',self.line) is None:
-				#If there is a jump involved
-				if re.search(';',self.line) is None:
-					self.comp_ = self.line
+		if re.search('^function .*', self.line) is not None:
+			cType = funct_type
+			temp_f = re.split('\S+',self.line)
+			first=False
+			second=False
+			for p in temp_f:
+				if first:
+					arg1 = p
+					first=False
+					second=True
+				elif second:
+					arg2 = p
+					second=False
 				else:
-					temp_jump = re.search('(.*)(;)(.*)',self.line)
-					self.comp_=temp_jump.group(1)
-					self.jump_=temp_jump.group(3)
-			else:
-				#If there is a jump involved
-				if re.search(';',self.line) is None:
-					temp_dest=re.search('(.*)(\=)(.*)',self.line)
-					self.comp_=temp_dest.group(3)
-					self.dest_=temp_dest.group(1)
+					first=True
+
+		elif re.search('^label .*',self.line) is not None:
+			cType = lable_type
+			temp_l = re.search('(^label\S+)(.*)',self.line)
+			arg1 = temp_l.group(2)
+		elif re.search('^return',self.line) is not None:
+			cType = ret_type;
+		elif re.search('^pop .*',self.line) is not None:
+			cType = pop_type
+
+			temp_po = re.split('\S+',self.line)
+			first=False
+			second=False
+			for p in temp_po:
+				if first:
+					arg1 = p
+					first=False
+					second=True
+				elif second:
+					arg2 = p
+					second=False
 				else:
-					temp_dest = re.search('(.*)(\=)(.*)(;)(.*)',self.line)
-					self.comp_=temp_dest.group(3)
-					self.dest_=temp_dest.group(1)
-					self.jump_=temp_dest.group(5)
-			self.line_num+=1
+					first=True
+
+		elif re.search('^push .*',self.line) is not None:
+			cType = push_type
+
+			temp_pu = re.split('\S+',self.line)
+			first=False
+			second=False
+			for p in temp_pu:
+				if first:
+					arg1 = p
+					first=False
+					second=True
+				elif second:
+					arg2 = p
+					second=False
+				else:
+					first=True
+
+		elif re.search('^if-goto .*',self.line) is not None:
+			cType = if_type+' '+goto_type
+			#not used in this project
+		self.line_num+=1
