@@ -19,7 +19,7 @@ def push(p_val):
 	temp_s += "M=D\n\n"
 	temp_s += "@SP\n"
 	temp_s += "M=M+1"
-	return temp_s
+	return temp_
 
 	#------------------------------------------------------------------------------
 	# inits the sp pointer
@@ -28,7 +28,7 @@ def push(p_val):
 		temp_s += "D=A\n\n"
 		temp_s += "@sp\n"
 		temp_s += "M=D\n\n"
-		return temp_s
+		self.outfile.write(temp_s)
 
 
 	#--------------------------------------------------------------------------
@@ -54,6 +54,17 @@ def push(p_val):
 			temp_s += "M=M-1"
 			temp_s += "A=M\n"
 			temp_s += "D=M\n\n"
+			temp_s += "@SP\n"
+			temp_s += "M=M-1"
+			temp_s += "A=M\n"
+			temp_s += "M=D+M\n\n"
+			temp_s += "@SP\n"
+			temp_s += "M=M+1"
+		elif 'sub' in command:
+			temp_s = "@SP\n"
+			temp_s += "M=M-1"
+			temp_s += "A=M\n"
+			temp_s += "D=M\n\n"
 			temp_s += "@R5\n"
 			temp_s += "M=D\n"
 			temp_s += "@SP\n"
@@ -67,4 +78,5 @@ def push(p_val):
 			temp_s += "M=D\n\n"
 			temp_s += "@SP\n"
 			temp_s += "M=M+1"
+
 
