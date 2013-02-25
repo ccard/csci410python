@@ -8,8 +8,6 @@ import sys, string, os, io,re
 
 class Parser:
 
-	#Inputed parameters
-	extend_op=False
 
 	#Constance
 	arith_type='C_ARITHMETIC'
@@ -28,14 +26,10 @@ class Parser:
 	cType=''
 	arg1=''
 	arg2=''
-	
-	neOf=True
 
 
-
-	def __init__(self,filein,extendedop):
+	def __init__(self,filein):
 		self.infile = open(filein)
-		self.extend_op = extendedop
 
 	#--------------------------------------------------------------------------
 	# Returns true if it has more commands
@@ -63,8 +57,8 @@ class Parser:
 		#Ensures that if it is invalid symbol or
 		#command it will cause an error when trying to look it up
 		self.cType='null'
-		self.arg1='null'
-		self.arg2='null'
+		self.arg1=''
+		self.arg2=''
 
 		#checks for EOF
 		temp = self.infile.tell()
@@ -77,62 +71,62 @@ class Parser:
 		self.line = self.line.strip()
 
 		if re.search('^function .*', self.line) is not None:
-			cType = funct_type
+			self.cType = self.funct_type
 			temp_f = re.split('\S+',self.line)
 			first=False
 			second=False
 			for p in temp_f:
 				if first:
-					arg1 = p
+					self.arg1 = p
 					first=False
 					second=True
 				elif second:
-					arg2 = p
+					self.arg2 = p
 					second=False
 				else:
 					first=True
 
 		elif re.search('^label .*',self.line) is not None:
-			cType = lable_type
+			self.cType = self.lable_type
 			temp_l = re.search('(^label\S+)(.*)',self.line)
 			arg1 = temp_l.group(2)
 		elif re.search('^return',self.line) is not None:
-			cType = ret_type;
+			self.cType = self.ret_type;
 		elif re.search('^pop .*',self.line) is not None:
-			cType = pop_type
+			self.cType = self.pop_type
 
 			temp_po = re.split('\S+',self.line)
 			first=False
 			second=False
 			for p in temp_po:
 				if first:
-					arg1 = p
+					self.arg1 = p
 					first=False
 					second=True
 				elif second:
-					arg2 = p
+					self.arg2 = p
 					second=False
 				else:
 					first=True
 
 		elif re.search('^push .*',self.line) is not None:
-			cType = push_type
+			self.cType = self.push_type
 
 			temp_pu = re.split('\S+',self.line)
 			first=False
 			second=False
 			for p in temp_pu:
 				if first:
-					arg1 = p
+					self.arg1 = p
 					first=False
 					second=True
 				elif second:
-					arg2 = p
+					self.arg2 = p
 					second=False
 				else:
 					first=True
 
 		elif re.search('^if-goto .*',self.line) is not None:
-			cType = if_type+' '+goto_type
+			self.cType = self.if_type+' '+self.goto_type
 			#not used in this project
 		self.line_num+=1
