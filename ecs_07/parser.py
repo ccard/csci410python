@@ -127,6 +127,8 @@ class Parser:
 					first=True
 
 		elif re.search('^if-goto .*',self.line) is not None:
-			self.cType = self.if_type+' '+self.goto_type
+			self.cType = self.if_type+'-'+self.goto_type
 			#not used in this project
+		elif re.search('^if .*',self.line) is not None:
+			self.cType = self.if_type
 		self.line_num+=1
