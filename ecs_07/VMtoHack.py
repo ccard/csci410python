@@ -44,6 +44,17 @@ def pop():
 # Var declerations
 #------------------------------------------------------------------------------
 
+#Constance
+arith_type='C_ARITHMETIC'
+push_type='C_PUSH'
+pop_type='C_POP'
+lable_type='C_LABEL'
+goto_type='C_GOTO'
+if_type='C_IF'
+funct_type='C_FUNCTION'
+ret_type='C_RETURN'
+call_type='C_CALL'
+
 in_file=''
 out_file=''
 
