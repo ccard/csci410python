@@ -6,14 +6,7 @@ import sys, string, os, io,re
 #Due:3/4/13
 #------------------------------------------------------------------------------
 
-class Parser:
-
-
-#------------------------------------------------------------------------------
-# Cretes push commands
-def push(p_val):
-	
-	return temp_
+class CodeWriter:
 
 	#Constance
 	arith_type='C_ARITHMETIC'
