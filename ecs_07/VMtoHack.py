@@ -13,32 +13,6 @@ from parser import Parser
 # Def sub routines
 #------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
-# Cretes push commands
-def init_sp():
-	temp_s = "@256\n"
-	temp_s += "D=A\n\n"
-	temp_s += "@sp\n"
-	temp_s += "M=D\n\n"
-	return temp_s
-
-#------------------------------------------------------------------------------
-# Cretes push commands
-def push(p_val):
-	temp_s += "@"+p_val+"\n"
-	temp_s += "D=A\n\n"
-	temp_s = "@SP\n"
-	temp_s += "A=M\n"
-	temp_s += "M=D\n\n"
-	temp_s += "@SP\n"
-	temp_s += "M=M+1"
-	return temp_s
-
-#------------------------------------------------------------------------------
-# Cretes pop commands
-def pop():
-
-
 
 #------------------------------------------------------------------------------
 # Var declerations
