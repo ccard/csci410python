@@ -78,11 +78,10 @@ class CodeWriter:
 			temp_s += "D=M\n\n"
 			temp_s += "@R13\n"
 			temp_s += "D=D-M\n\n"
-			temp_s = "@SP\n"
-			temp_s += "A=M\n"
-			temp_s += "M=D\n\n"
 			temp_s += "@SP\n"
-			temp_s += "M=M+1\n\n"
+			temp_s += "AM=M+1\n"
+			temp_s += "A=A-1\n"
+			temp_s += "M=D\n\n"
 			self.outfile.write(temp_s)
 		elif 'neg' in command:
 			temp_s = "@SP\n"
@@ -91,11 +90,10 @@ class CodeWriter:
 			temp_s += "D=M\n\n"
 			temp_s += "@1\n"
 			temp_s += "D=-D\n"
-			temp_s = "@SP\n"
-			temp_s += "A=M\n"
-			temp_s += "M=D\n\n"
 			temp_s += "@SP\n"
-			temp_s += "M=M+1\n\n"
+			temp_s += "AM=M+1\n"
+			temp_s += "A=A-1\n"
+			temp_s += "M=D\n\n"
 			self.outfile.write(temp_s)
 		elif 'eq' in command:
 			temp_s = "@SP\n"
@@ -112,10 +110,9 @@ class CodeWriter:
 			temp_s += "D=-1\n\n"
 			temp_s += "(eq."+repr(self.eq_jump)+")\n\n"
 			temp_s += "@SP\n"
-			temp_s += "A=M\n"
+			temp_s += "AM=M+1\n"
+			temp_s += "A=A-1\n"
 			temp_s += "M=!D\n\n"
-			temp_s += "@SP\n"
-			temp_s += "M=M+1\n\n"
 			self.eq_jump += 1
 			self.outfile.write(temp_s)
 		elif 'lt' in command:
@@ -138,10 +135,9 @@ class CodeWriter:
 			temp_s += "D=A\n\n"
 			temp_s += "(lt."+repr(self.lt_jump)+")\n\n"
 			temp_s += "@SP\n"
-			temp_s += "A=M\n"
+			temp_s += "AM=M+1\n"
+			temp_s += "A=A-1\n"
 			temp_s += "M=D\n\n"
-			temp_s += "@SP\n"
-			temp_s += "M=M+1\n\n"
 			self.lt_jump += 1
 			self.outfile.write(temp_s)
 		elif 'gt' in command:
@@ -164,10 +160,9 @@ class CodeWriter:
 			temp_s += "D=A\n\n"
 			temp_s += "(gt."+repr(self.gt_jump)+")\n\n"
 			temp_s += "@SP\n"
-			temp_s += "A=M\n"
+			temp_s += "AM=M+1\n"
+			temp_s += "A=A-1\n"
 			temp_s += "M=D\n\n"
-			temp_s += "@SP\n"
-			temp_s += "M=M+1\n\n"
 			self.gt_jump += 1
 			self.outfile.write(temp_s)
 		elif 'and' in command:
