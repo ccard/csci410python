@@ -74,7 +74,6 @@ class Parser:
 		if re.search('^add', self.line) is not None:
 			self.cType = self.arith_type
 			self.arg1 = self.line
-			print('here '+self.arg1)
 
 		elif re.search('^sub', self.line) is not None:
 			self.cType = self.arith_type
