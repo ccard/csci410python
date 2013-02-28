@@ -207,10 +207,9 @@ class CodeWriter:
 				temp_s = "@"+index+"\n"
 				temp_s += "D=A\n\n"
 				temp_s += "@SP\n"
-				temp_s += "A=M\n"
+				temp_s += "AM=M+1\n"
+				temp_s += "A=A-1\n"
 				temp_s += "M=D\n\n"
-				temp_s += "@SP\n"
-				temp_s += "M=M+1\n\n"
 				self.outfile.write(temp_s)
 			else:
 				temp_s = "@"+index+"\n"
@@ -219,10 +218,9 @@ class CodeWriter:
 				temp_s += "A=D+M\n"
 				temp_s += "D=M\n\n"
 				temp_s += "@SP\n"
-				temp_s += "A=M\n"
+				temp_s += "AM=M+1\n"
+				temp_s += "A=A-1\n"
 				temp_s += "M=D\n\n"
-				temp_s += "@SP\n"
-				temp_s += "M=M+1\n\n"
 				self.outfile.write(temp_s)
 		else:
 			if 'constant' in segment:
@@ -233,8 +231,7 @@ class CodeWriter:
 				temp_s = "@"+index+"\n"
 				temp_s += "D=A\n\n"
 				temp_s += "@"+segment+"\n"
-				temp_s += "A=D+M\n"
-				temp_s += "D=A\n\n"
+				temp_s += "D=D+M\n"
 				temp_s += "@R13\n"
 				temp_s += "M=D\n\n"
 				temp_s += "@SP\n"
