@@ -5,9 +5,10 @@ from codewriter import CodeWriter
 #------------------------------------------------------------------------------
 #Chris Card
 #CS410
-#ECS project 06
+#ECS project 07
 #python 3.3
 #Due:3/4/13
+#This is the main program
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -49,20 +50,22 @@ if len(sys.argv) < 1: #Checks to see if user put in file
 
 in_file=sys.argv[1]
 
-#Checks for correct file name
+#Checks for correct file name if not then assumes directory
 if re.search('.*\.vm',in_file) is None:
 	is_dir=True
+	#goes through the directory and finds the .vm files
 	temp = os.listdir(in_file)
 	for f in temp:
 		if re.search('.*\.vm',f) is not None:
 			temp_s = in_file+"/"+f
 			directory.append(temp_s)
 	
+	#if no files found in directory then error
 	if len(directory) == 0:
-		print("Error no .vm files in path "+in_file)
+		print("Error no '*.vm' files in path "+in_file)
 		sys.exit(0)
 else:
-	#Strips .asm of the end and adds .hack
+	#Strips .vm of the end and adds .asm
 	temp_out=re.search('(.*)(\.vm)',in_file)
 	out_file+=temp_out.group(1)+'.asm'
 
@@ -70,15 +73,19 @@ else:
 # Main
 #------------------------------------------------------------------------------
 
+#for directories passed in
 if is_dir:
 	for d in directory:
-		#Strips .asm of the end and adds .hack
+		#Strips .vm of the end and adds .asm
 		temp_out=re.search('(.*)(\.vm)',d)
 		out_file = temp_out.group(1)+'.asm'
 
+		#opens the output file
 		writer.setFileName(out_file)
 
+		#opens the input file
 		par = Parser(d)
+		#while not eof
 		while par.hasMoreCommands():
 			par.advance()
 			cType = par.commandType()
@@ -118,6 +125,7 @@ if is_dir:
 
 		writer.Close()
 
+#this is for a single file
 else:
 	writer.setFileName(out_file)
 
