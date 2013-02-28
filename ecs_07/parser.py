@@ -2,7 +2,7 @@ import sys, string, os, io,re
 #------------------------------------------------------------------------------
 #Chris Card
 #CS410
-#ECS project 06
+#ECS project 07
 #Due:3/4/13
 #------------------------------------------------------------------------------
 
@@ -55,8 +55,7 @@ class Parser:
 	#--------------------------------------------------------------------------
 	# Advance parser to next line
 	def advance(self):
-		#Ensures that if it is invalid symbol or
-		#command it will cause an error when trying to look it up
+		#sets args to empty string and cType to null
 		self.cType='null'
 		self.arg1=''
 		self.arg2=''
@@ -127,6 +126,7 @@ class Parser:
 			self.cType = self.lable_type
 			temp_l = re.search('(^label\S+)(.*)',self.line)
 			arg1 = temp_l.group(2)
+
 		elif re.search('^return',self.line) is not None:
 			self.cType = self.ret_type;
 
