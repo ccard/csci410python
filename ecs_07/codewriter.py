@@ -25,21 +25,16 @@ class CodeWriter:
 	lt_jump=0
 	gt_jump=0
 
+	#table for translating locations
+	locat = {'local':'LCL', 'argument':'ARG','this':'THIS',
+			'that':'THAT', 'pointer':'3', 'temp':'5', 'static':'16'}
+
 
 	#--------------------------------------------------------------------------
 	#the constructor
 	def __init__(self):
 		pass
-
-	#--------------------------------------------------------------------------
-	# inits the sp pointer
-	def init_sp(self):
-		temp_s = "//This initializes the stack pointer\n"
-		temp_s += "@256\n"
-		temp_s += "D=A\n\n"
-		temp_s += "@sp\n"
-		temp_s += "M=D\n\n"
-		self.outfile.write(temp_s)
+		
 
 	#--------------------------------------------------------------------------
 	#closes the current file
@@ -50,7 +45,6 @@ class CodeWriter:
 	#opens new outfile
 	def setFileName(self, fileout):
 		self.outfile = open(fileout, 'w')
-		#self.init_sp()
 
 	#--------------------------------------------------------------------------
 	# writes arithmatic commands
@@ -224,16 +218,28 @@ class CodeWriter:
 				temp_s += "M=D\n\n"
 				self.outfile.write(temp_s)
 			else:
-				temp_s += "@"+index+"\n"
-				temp_s += "D=A\n\n"
-				temp_s += "@"+segment+"\n"
-				temp_s += "A=D+M\n"
-				temp_s += "D=M\n\n"
-				temp_s += "@SP\n"
-				temp_s += "AM=M+1\n"
-				temp_s += "A=A-1\n"
-				temp_s += "M=D\n\n"
-				self.outfile.write(temp_s)
+				if 'temp' in segment or 'static' in segment or 'pointer' in segment:
+					temp_s += "@"+index+"\n"
+					temp_s += "D=A\n\n"
+					temp_s += "@"+self.locat[segment]+"\n"
+					temp_s += "A=D+A\n"
+					temp_s += "D=M\n\n"
+					temp_s += "@SP\n"
+					temp_s += "AM=M+1\n"
+					temp_s += "A=A-1\n"
+					temp_s += "M=D\n\n"
+					self.outfile.write(temp_s)
+				else:
+					temp_s += "@"+index+"\n"
+					temp_s += "D=A\n\n"
+					temp_s += "@"+self.locat[segment]+"\n"
+					temp_s += "A=D+M\n"
+					temp_s += "D=M\n\n"
+					temp_s += "@SP\n"
+					temp_s += "AM=M+1\n"
+					temp_s += "A=A-1\n"
+					temp_s += "M=D\n\n"
+					self.outfile.write(temp_s)
 		else:
 			temp_s = "//This is the pop command\n"
 			if 'constant' in segment:
@@ -241,17 +247,33 @@ class CodeWriter:
 				temp_s += "M=M-1\n\n"
 				self.outfile.write(temp_s)
 			else:
-				temp_s += "@"+index+"\n"
-				temp_s += "D=A\n\n"
-				temp_s += "@"+segment+"\n"
-				temp_s += "D=D+M\n"
-				temp_s += "@R13\n"
-				temp_s += "M=D\n\n"
-				temp_s += "@SP\n"
-				temp_s += "M=M-1\n"
-				temp_s += "A=M\n"
-				temp_s += "D=M\n\n"
-				temp_s += "@R13\n"
-				temp_s += "A=M\n"
-				temp_s += "M=D\n\n"
-				self.outfile.write(temp_s)
+				if 'temp' in segment or 'static' in segment or 'pointer' in segment:
+					temp_s += "@"+index+"\n"
+					temp_s += "D=A\n\n"
+					temp_s += "@"+self.locat[segment]+"\n"
+					temp_s += "D=D+A\n"
+					temp_s += "@R13\n"
+					temp_s += "M=D\n\n"
+					temp_s += "@SP\n"
+					temp_s += "M=M-1\n"
+					temp_s += "A=M\n"
+					temp_s += "D=M\n\n"
+					temp_s += "@R13\n"
+					temp_s += "A=M\n"
+					temp_s += "M=D\n\n"
+					self.outfile.write(temp_s)
+				else:
+					temp_s += "@"+index+"\n"
+					temp_s += "D=A\n\n"
+					temp_s += "@"+self.locat[segment]+"\n"
+					temp_s += "D=D+M\n"
+					temp_s += "@R13\n"
+					temp_s += "M=D\n\n"
+					temp_s += "@SP\n"
+					temp_s += "M=M-1\n"
+					temp_s += "A=M\n"
+					temp_s += "D=M\n\n"
+					temp_s += "@R13\n"
+					temp_s += "A=M\n"
+					temp_s += "M=D\n\n"
+					self.outfile.write(temp_s)
