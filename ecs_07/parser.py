@@ -26,6 +26,7 @@ class Parser:
 	cType=''
 	arg1=''
 	arg2=''
+	neOf=True
 
 
 	def __init__(self,filein):
@@ -70,7 +71,44 @@ class Parser:
 
 		self.line = self.line.strip()
 
-		if re.search('^function .*', self.line) is not None:
+		if re.search('^add', self.line) is not None:
+			self.cType = self.arith_type
+			self.arg1 = self.line
+			print('here '+self.arg1)
+
+		elif re.search('^sub', self.line) is not None:
+			self.cType = self.arith_type
+			self.arg1 = self.line
+
+		elif re.search('^neg', self.line) is not None:
+			self.cType = self.arith_type
+			self.arg1 = self.line
+
+		elif re.search('^lt', self.line) is not None:
+			self.cType = self.arith_type
+			self.arg1 = self.line
+
+		elif re.search('^eq', self.line) is not None:
+			self.cType = self.arith_type
+			self.arg1 = self.line
+
+		elif re.search('^gt', self.line) is not None:
+			self.cType = self.arith_type
+			self.arg1 = self.line
+
+		elif re.search('^and', self.line) is not None:
+			self.cType = self.arith_type
+			self.arg1 = self.line
+
+		elif re.search('^or', self.line) is not None:
+			self.cType = self.arith_type
+			self.arg1 = self.line
+			
+		elif re.search('^not', self.line) is not None:
+			self.cType = self.arith_type
+			self.arg1 = self.line
+
+		elif re.search('^function .*', self.line) is not None:
 			self.cType = self.funct_type
 			temp_f = re.split('\S+',self.line)
 			first=False
@@ -92,10 +130,11 @@ class Parser:
 			arg1 = temp_l.group(2)
 		elif re.search('^return',self.line) is not None:
 			self.cType = self.ret_type;
+
 		elif re.search('^pop .*',self.line) is not None:
 			self.cType = self.pop_type
 
-			temp_po = re.split('\S+',self.line)
+			temp_po = re.split('\s+',self.line)
 			first=False
 			second=False
 			for p in temp_po:
@@ -112,7 +151,7 @@ class Parser:
 		elif re.search('^push .*',self.line) is not None:
 			self.cType = self.push_type
 
-			temp_pu = re.split('\S+',self.line)
+			temp_pu = re.split('\s+',self.line)
 			first=False
 			second=False
 			for p in temp_pu:
@@ -129,6 +168,8 @@ class Parser:
 		elif re.search('^if-goto .*',self.line) is not None:
 			self.cType = self.if_type+'-'+self.goto_type
 			#not used in this project
+
 		elif re.search('^if .*',self.line) is not None:
 			self.cType = self.if_type
+		
 		self.line_num+=1
