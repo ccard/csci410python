@@ -49,7 +49,7 @@ class CodeWriter:
 	#opens new outfile
 	def setFileName(self, fileout):
 		self.outfile = open(fileout, 'w')
-		self.init_sp()
+		#self.init_sp()
 
 	#--------------------------------------------------------------------------
 	# writes arithmatic commands
