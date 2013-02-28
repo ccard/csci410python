@@ -80,6 +80,46 @@ if is_dir:
 
 		par = Parser(d)
 		while par.hasMorecommands():
+			par.advance()
+			cType = par.commandType()
+
+			if arith_type in cType:
+				writer.writeArithmetic(par.arg_1())
+			
+			elif push_type in cType:
+				if len(par.arg_2()) == 0:
+					writer.writePushPop(cType,'constant',par.arg_1())
+				else:
+					writer.writePushPop(cType,par.arg_1(),par.arg_2())
+
+			elif pop_type in cType:
+				if len(par.arg_2()) == 0:
+					writer.writePushPop(cType,'constant',par.arg_1())
+				else:
+					writer.writePushPop(cType,par.arg_1(),par.arg_2())
+
+			elif funct_type in cType:
+				pass #latter project
+
+			elif goto_type in cType:
+				if if_type in cType:
+					pass #latter project
+				else:
+					pass #latter project
+
+			elif if_type in cType:
+				pass #latter project
+
+			elif lable_type in cType:
+				pass #latter project
+
+			elif call_type in cType:
+				pass #latter project
+
+		writer.Close()
+
+else:
+	
 
 
 
