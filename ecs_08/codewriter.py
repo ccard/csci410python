@@ -232,9 +232,10 @@ class CodeWriter:
 	def writeFunction(self, functionName, numLocals):
 		temp = int(numLocals)
 		self.outfile.write('('+functionName+')\n\n')
+		self.outfile.write('//zero local values\n')
 		for i in range(0,temp):
 			writePushPop(push_type,'constant',0)
-		
+
 
 	#--------------------------------------------------------------------------
 	# writes arithmatic commands
