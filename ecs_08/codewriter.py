@@ -156,6 +156,77 @@ class CodeWriter:
 		temp_s += '('+ret+')\n\n'
 		self.outfile.write(temp_s)
 
+	#--------------------------------------------------------------------------
+	# This writes the return call of the function
+	def writeReturn(self):
+		temp_s = '//return of the function\n'
+		temp_s += '@LCL\n'
+		temp_s += 'D=M\n\n'
+		temp_s += '@R13\n'
+		temp_s += 'MD=D\n\n'
+
+		temp_s += '//gets the return address\n'
+		temp_s += '@5\n'
+		temp_s += 'D=D-A\n\n'
+		temp_s += '@R14\n'
+		temp_s += 'M=D\n\n'
+
+		temp_s += '//moves return value to arg\n'
+		temp_s += '@SP\n'
+		temp_s += 'M=M-1\n'
+		temp_s += 'A=M\n'
+		temp_s += 'D=M\n\n'
+		temp_s += '@ARG\n'
+		temp_s += 'A=M\n'
+		temp_s += 'M=D\n\n'
+
+		temp_s += '//repositions the stack pointer for caller\n'
+		temp_s += '@ARG\n'
+		temp_s += 'D=M\n\n'
+		temp_s += '@SP\n'
+		temp_s += 'M=D+1\n\n'
+
+		temp_s += '//resets that to the caller\n'
+		temp_s += '@R13\n'
+		temp_s += 'D=M\n\n'
+		temp_s += '@1\n'
+		temp_s += 'D=D-A\n\n'
+		temp_s += '@THAT\n'
+		temp_s += 'M=D\n\n'
+
+		temp_s += '//resets this to the caller\n'
+		temp_s += '@R13\n'
+		temp_s += 'D=M\n\n'
+		temp_s += '@2\n'
+		temp_s += 'D=D-A\n\n'
+		temp_s += '@THIS\n'
+		temp_s += 'M=D\n\n'
+
+		temp_s += '//resets arg to the caller\n'
+		temp_s += '@R13\n'
+		temp_s += 'D=M\n\n'
+		temp_s += '@3\n'
+		temp_s += 'D=D-A\n\n'
+		temp_s += '@ARG\n'
+		temp_s += 'M=D\n\n'
+
+		temp_s += '//resets lcl to the caller\n'
+		temp_s += '@R13\n'
+		temp_s += 'D=M\n\n'
+		temp_s += '@4\n'
+		temp_s += 'D=D-A\n\n'
+		temp_s += '@LCL\n'
+		temp_s += 'M=D\n\n'
+
+		temp_s += '//returns to the calling function\n'
+		temp_s += '@R14\n'
+		temp_s += 'D=M\n\n'
+		temp_s += '@0\n'
+		temp_s += 'A=D\n'
+		temp_s += '0;JMP\n\n'
+
+		self.outfile.write(temp_s)
+
 
 	#--------------------------------------------------------------------------
 	# writes arithmatic commands
