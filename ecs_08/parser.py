@@ -176,9 +176,6 @@ class Parser:
 			temp_ifg = re.search('(^if-goto\s+)(.*)',self.line)
 			self.arg1 = temp_ifg.group(2)
 
-		elif re.search('^if .*',self.line) is not None:
-			self.cType = self.if_type
-
 		elif re.search('^goto .*',self.line) is not	None:
 			self.cType = self.goto_type
 			temp_gt = re.search('(^goto\s+)(.*)',self.line)
