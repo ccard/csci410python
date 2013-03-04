@@ -41,13 +41,11 @@ is_dir=False
 #is first time through
 is_first=True
 
-writer = CodeWriter()
-
 #------------------------------------------------------------------------------
 # Check user input
 #------------------------------------------------------------------------------
-if len(sys.argv) < 1: #Checks to see if user put in file
-	print('incorrect number of args!')
+if len(sys.argv) < 2: #Checks to see if user put in file
+	print('incorrect number of args!')	
 	print('assembler.py <file.vm|directry path>')
 	sys.exit(0)
 
@@ -78,11 +76,13 @@ else:
 
 #for directories passed in
 if is_dir:
+	temp_o = re.search('(.*)(\.vm)',temp[0])
+	writer = CodeWriter(temp_o.group(1)+'.asm')
 	for d in directory:
 		if is_first:
 			#Strips .vm of the end and adds .asm
 			temp_out=re.search('(.*)(\.vm)',d)
-			out_file = temp_out.group(1)+'.asm'
+			out_file = temp_out.group(1)
 
 			#opens the output file
 			writer.setFileName(out_file)
@@ -132,6 +132,7 @@ if is_dir:
 
 #this is for a single file
 else:
+	writer = CodeWriter(out_file)
 	writer.setFileName(out_file)
 
 	par = Parser(in_file)
