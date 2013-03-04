@@ -38,6 +38,9 @@ out_file=''
 directory = []
 is_dir=False
 
+#is first time through
+is_first=True
+
 writer = CodeWriter()
 
 #------------------------------------------------------------------------------
@@ -76,12 +79,14 @@ else:
 #for directories passed in
 if is_dir:
 	for d in directory:
-		#Strips .vm of the end and adds .asm
-		temp_out=re.search('(.*)(\.vm)',d)
-		out_file = temp_out.group(1)+'.asm'
+		if is_first:
+			#Strips .vm of the end and adds .asm
+			temp_out=re.search('(.*)(\.vm)',d)
+			out_file = temp_out.group(1)+'.asm'
 
-		#opens the output file
-		writer.setFileName(out_file)
+			#opens the output file
+			writer.setFileName(out_file)
+			is_first=False
 
 		#opens the input file
 		par = Parser(d)
@@ -123,7 +128,7 @@ if is_dir:
 			elif call_type in cType:
 				pass #latter project
 
-		writer.Close()
+	writer.Close()
 
 #this is for a single file
 else:
