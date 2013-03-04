@@ -76,17 +76,15 @@ else:
 
 #for directories passed in
 if is_dir:
-	temp_o = re.search('(.*)(\.vm)',temp[0])
+	temp_o = re.search('(.*)(\.vm)',directory[0])
 	writer = CodeWriter(temp_o.group(1)+'.asm')
 	for d in directory:
-		if is_first:
-			#Strips .vm of the end and adds .asm
-			temp_out=re.search('(.*)(\.vm)',d)
-			out_file = temp_out.group(1)
+		#Strips .vm of the end and adds .asm
+		temp_out=re.search('(.*)(\.vm)',d)
+		out_file = temp_out.group(1)
 
-			#opens the output file
-			writer.setFileName(out_file)
-			is_first=False
+		#opens the output file
+		writer.setFileName(out_file)
 
 		#opens the input file
 		par = Parser(d)
@@ -111,16 +109,10 @@ if is_dir:
 					writer.writePushPop(cType,par.arg_1(),par.arg_2())
 
 			elif funct_type in cType:
-				pass #latter project
+				writer.writeFunction(par.arg_1(),par.arg_2())
 
 			elif goto_type in cType:
-				if if_type in cType:
-					pass #latter project
-				else:
-					pass #latter project
-
-			elif if_type in cType:
-				pass #latter project
+				writer.writeIf()
 
 			elif lable_type in cType:
 				pass #latter project
