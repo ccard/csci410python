@@ -20,6 +20,10 @@ class CodeWriter:
 	ret_type='C_RETURN'
 	call_type='C_CALL'
 
+	#the file and current function
+	fileName=''
+	currFunct=''
+
 	#jump counters
 	eq_jump=0
 	lt_jump=0
@@ -29,11 +33,14 @@ class CodeWriter:
 	locat = {'local':'LCL', 'argument':'ARG','this':'THIS',
 			'that':'THAT', 'pointer':'3', 'temp':'5', 'static':'16'}
 
+	#table for function return counts
+	functRetC = {'i':0}
+
 
 	#--------------------------------------------------------------------------
 	#the constructor
-	def __init__(self):
-		pass
+	def __init__(self, fileout):
+		self.outfile = open(fileout, 'w')
 		
 
 	#--------------------------------------------------------------------------
@@ -44,7 +51,111 @@ class CodeWriter:
 	#--------------------------------------------------------------------------
 	#opens new outfile
 	def setFileName(self, fileout):
-		self.outfile = open(fileout, 'w')
+		self.fileName = fileout
+
+	#--------------------------------------------------------------------------
+	#This boot straps the flie
+	def writeInit(self):
+		temp_s = '//Bootstrapping\n'
+		temp_s += '@256\n'
+		temp_s += 'D=A\n\n'
+		temp_s += '@SP\n'
+		temp_s += 'M=D\n\n'
+
+	#--------------------------------------------------------------------------
+	#This writes a label to the file
+	def writeLabel(self, label):
+		temp_s = '('+self.fileName+'.'+label+')\n\n'
+		self.outfile.write(temp_s)
+
+	#--------------------------------------------------------------------------
+	# This grites a goto statement
+	def writeGoto(self,label):
+		temp_s = '@'+self.fileName+'.'+label+'\n'
+		temp_s += '0; JMP\n\n'
+		self.outfile.write(temp_s)
+
+	#--------------------------------------------------------------------------
+	# This writes a if-goto statment
+	def writeIf(self,label):
+		temp_s = '//if statment\n'
+		temp_s += '@SP\n'
+		temp_s += 'M=M-1\n'
+		temp_s += 'A=M\n'
+		temp_s += 'D=M+1\n\n'
+		temp_s += '@'+self.fileName+'.'+label+'\n'
+		temp_s += 'D;JEQ\n\n'
+		self.outfile.write(temp_s)
+
+	#--------------------------------------------------------------------------
+	# This writes the call of a function function
+	def writeCall(self, functionName, numArgs):
+		temp = 0
+		if functionName in functRetC:
+			temp = functRetC[functionName]
+			functRetC[functionName] = temp+1
+		else:
+			functRetC[functionName] = temp+1
+
+		ret = functionName+'.RET.'+repr(temp)
+
+		temp_s = "//calls function "+functionName+'\n'
+		self.outfile.write(temp_s)
+		writePushPop(push_type,'constant',ret)
+		temp_s = '//saves local to stack\n'
+		temp_s += "@LCL\n"
+		temp_s += "D=M\n\n"
+		temp_s += "@SP\n"
+		temp_s += "AM=M+1\n"
+		temp_s += "A=A-1\n"
+		temp_s += "M=D\n\n"
+		
+		temp_s += '//saves arg to the stack\n'
+		temp_s += "@ARG\n"
+		temp_s += "D=M\n\n"
+		temp_s += "@SP\n"
+		temp_s += "AM=M+1\n"
+		temp_s += "A=A-1\n"
+		temp_s += "M=D\n\n"
+		
+		temp_s += '//saves this to stack\n'
+		temp_s += "@THIS\n"
+		temp_s += "D=M\n\n"
+		temp_s += "@SP\n"
+		temp_s += "AM=M+1\n"
+		temp_s += "A=A-1\n"
+		temp_s += "M=D\n\n"
+
+		temp_s += '//saves that to stack\n'
+		temp_s += "@THAT\n"
+		temp_s += "D=M\n\n"
+		temp_s += "@SP\n"
+		temp_s += "AM=M+1\n"
+		temp_s += "A=A-1\n"
+		temp_s += "M=D\n\n"
+
+		temp_s += '//resets arg to new location\n'
+		temp_s += '@SP\n'
+		temp_s += 'D=M\n\n'
+		temp_s += '@'+numArgs+'\n'
+		temp_s += 'D=D-A\n\n'
+		temp_s += '@5\n'
+		temp_s += 'D=D-A\n\n'
+		temp_s += '@ARG\n'
+		temp_s += 'M=D\n\n'
+
+		temp_s += '//sets lcl to sp\n'
+		temp_s += '@SP\n'
+		temp_s += 'D=M\n\n'
+		temp_s += '@LCL\n'
+		temp_s += 'M=D\n\n'
+
+		temp_s += '@'+functionName+'\n'
+		temp_s += '0;JMP\n\n'
+
+		temp_s += '('+ret+')\n\n'
+		self.outfile.write(temp_s)
+
 
 	#--------------------------------------------------------------------------
 	# writes arithmatic commands
