@@ -227,6 +227,14 @@ class CodeWriter:
 
 		self.outfile.write(temp_s)
 
+	#--------------------------------------------------------------------------
+	# this wirtes the code for a function
+	def writeFunction(self, functionName, numLocals):
+		temp = int(numLocals)
+		self.outfile.write('('+functionName+')\n\n')
+		for i in range(0,temp):
+			writePushPop(push_type,'constant',0)
+		
 
 	#--------------------------------------------------------------------------
 	# writes arithmatic commands
