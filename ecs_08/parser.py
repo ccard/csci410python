@@ -109,7 +109,7 @@ class Parser:
 
 		elif re.search('^function .*', self.line) is not None:
 			self.cType = self.funct_type
-			temp_f = re.split('\S+',self.line)
+			temp_f = re.split('\s+',self.line)
 			first=False
 			second=False
 			for p in temp_f:
@@ -123,10 +123,16 @@ class Parser:
 				else:
 					first=True
 
+		elif re.search('^call .*',self.line) is not None:
+			self.cType = self.call_type
+			temp_c = re.search('(^call\s+)(.+)(\s+)(.+)',self.line)
+			arg1 = temp_c.group(2)
+			arg2 = temp_c.group(4)
+
 		elif re.search('^label .*',self.line) is not None:
 			self.cType = self.lable_type
-			temp_l = re.search('(^label\S+)(.*)',self.line)
-			arg1 = temp_l.group(2)
+			temp_l = re.search('(^label\s+)(.*)',self.line)
+			arg1 = '('+temp_l.group(2)+')'
 
 		elif re.search('^return',self.line) is not None:
 			self.cType = self.ret_type;
@@ -167,9 +173,15 @@ class Parser:
 
 		elif re.search('^if-goto .*',self.line) is not None:
 			self.cType = self.if_type+'-'+self.goto_type
-			#not used in this project
+			temp_ifg = re.search('(^if-goto\s+)(.*)',self.line)
+			self.arg1 = temp_ifg.group(2)
 
 		elif re.search('^if .*',self.line) is not None:
 			self.cType = self.if_type
+
+		elif re.search('^goto .*',self.line) is not	None:
+			self.cType = self.goto_type
+			temp_gt = re.search('(^goto\s+)(.*)',self.line)
+			self.arg1 = temp_gt.group(2)
 		
 		self.line_num+=1
