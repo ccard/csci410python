@@ -26,7 +26,7 @@ push_type='C_PUSH'
 pop_type='C_POP'
 lable_type='C_LABEL'
 goto_type='C_GOTO'
-if_type='C_IF'
+if_type='C_IF-C_GOTO'
 funct_type='C_FUNCTION'
 ret_type='C_RETURN'
 call_type='C_CALL'
@@ -112,13 +112,16 @@ if is_dir:
 				writer.writeFunction(par.arg_1(),par.arg_2())
 
 			elif goto_type in cType:
-				writer.writeIf()
+				writer.writeIf(par.arg_1())
 
 			elif lable_type in cType:
-				pass #latter project
+				writer.writeLabel(par.arg_1())
 
 			elif call_type in cType:
-				pass #latter project
+				writer.writeCall(par.arg_1(),par.arg_2)
+
+			elif ret_type in cType:
+				writer.writeReturn()
 
 	writer.Close()
 
@@ -149,22 +152,22 @@ else:
 				writer.writePushPop(cType,par.arg_1(),par.arg_2())
 
 		elif funct_type in cType:
-			pass #latter project
-
-		elif goto_type in cType:
-			if if_type in cType:
-				pass #latter project
-			else:
-				pass #latter project
+			writer.writeFunction(par.arg_1(),par.arg_2())
 
 		elif if_type in cType:
-			pass #latter project
+			writer.writeIf(par.arg_1())
+
+		elif goto_type in cType:
+			writer.writeGoto(par.arg_1())
 
 		elif lable_type in cType:
-			pass #latter project
+			writer.writeLabel(par.arg_1())
 
 		elif call_type in cType:
-			pass #latter project
+			writer.writeCall(par.arg_1(),par.arg_2())
+
+		elif ret_type in cType:
+			writer.writeReturn()
 
 	writer.Close()
 
