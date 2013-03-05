@@ -61,6 +61,9 @@ class CodeWriter:
 		temp_s += 'D=A\n\n'
 		temp_s += '@SP\n'
 		temp_s += 'M=D\n\n'
+		temp_s += '@Sys.int\n'
+		temp_s += '0;JMP\n\n'
+		self.outfile.write(temp_s)
 
 	#--------------------------------------------------------------------------
 	#This writes a label to the file
@@ -82,26 +85,26 @@ class CodeWriter:
 		temp_s += '@SP\n'
 		temp_s += 'M=M-1\n'
 		temp_s += 'A=M\n'
-		temp_s += 'D=M+1\n\n'
+		temp_s += 'D=M\n\n'
 		temp_s += '@'+self.fileName+'.'+label+'\n'
-		temp_s += 'D;JEQ\n\n'
+		temp_s += 'D;JNE\n\n'
 		self.outfile.write(temp_s)
 
 	#--------------------------------------------------------------------------
 	# This writes the call of a function function
 	def writeCall(self, functionName, numArgs):
 		temp = 0
-		if functionName in functRetC:
-			temp = functRetC[functionName]
-			functRetC[functionName] = temp+1
+		if functionName in self.functRetC:
+			temp = self.functRetC[functionName]
+			self.functRetC[functionName] = temp+1
 		else:
-			functRetC[functionName] = temp+1
+			self.functRetC[functionName] = temp+1
 
 		ret = functionName+'.RET.'+repr(temp)
 
 		temp_s = "//calls function "+functionName+'\n'
 		self.outfile.write(temp_s)
-		writePushPop(push_type,'constant',ret)
+		self.writePushPop(self.push_type,'constant',ret)
 		temp_s = '//saves local to stack\n'
 		temp_s += "@LCL\n"
 		temp_s += "D=M\n\n"
@@ -234,7 +237,7 @@ class CodeWriter:
 		self.outfile.write('('+functionName+')\n\n')
 		self.outfile.write('//zero local values\n')
 		for i in range(0,temp):
-			writePushPop(push_type,'constant',0)
+			self.writePushPop(self.push_type,'constant','0')
 
 
 	#--------------------------------------------------------------------------
