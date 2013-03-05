@@ -16,7 +16,7 @@ class Parser:
 	pop_type='C_POP'
 	lable_type='C_LABEL'
 	goto_type='C_GOTO'
-	if_type='C_IF'
+	if_type='C_IF-C_GOTO'
 	funct_type='C_FUNCTION'
 	ret_type='C_RETURN'
 	call_type='C_CALL'
@@ -172,7 +172,7 @@ class Parser:
 					first=True
 
 		elif re.search('^if-goto .*',self.line) is not None:
-			self.cType = self.if_type+'-'+self.goto_type
+			self.cType = self.if_type
 			temp_ifg = re.search('(^if-goto\s+)(.*)',self.line)
 			self.arg1 = temp_ifg.group(2)
 
