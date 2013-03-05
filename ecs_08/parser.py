@@ -112,12 +112,17 @@ class Parser:
 			temp_f = re.split('\s+',self.line)
 			first=False
 			second=False
+			count = 0
 			for p in temp_f:
-				if first:
+				if count >= 2:
+					break
+				elif first:
+					count += 1
 					self.arg1 = p
 					first=False
 					second=True
 				elif second:
+					count += 1
 					self.arg2 = p
 					second=False
 				else:
@@ -126,13 +131,14 @@ class Parser:
 		elif re.search('^call .*',self.line) is not None:
 			self.cType = self.call_type
 			temp_c = re.search('(^call\s+)(.+)(\s+)(.+)',self.line)
-			arg1 = temp_c.group(2)
-			arg2 = temp_c.group(4)
+			self.arg1 = temp_c.group(2)
+			self.arg2 = temp_c.group(4)
 
 		elif re.search('^label .*',self.line) is not None:
 			self.cType = self.lable_type
 			temp_l = re.search('(^label\s+)(.*)',self.line)
-			arg1 = '('+temp_l.group(2)+')'
+			self.arg1 = temp_l.group(2)
+			print('this is label '+self.arg1)
 
 		elif re.search('^return',self.line) is not None:
 			self.cType = self.ret_type;
@@ -143,12 +149,17 @@ class Parser:
 			temp_po = re.split('\s+',self.line)
 			first=False
 			second=False
+			count = 0
 			for p in temp_po:
-				if first:
+				if count >= 2:
+					break
+				elif first:
+					count += 1
 					self.arg1 = p
 					first=False
 					second=True
 				elif second:
+					count += 1
 					self.arg2 = p
 					second=False
 				else:
@@ -160,12 +171,17 @@ class Parser:
 			temp_pu = re.split('\s+',self.line)
 			first=False
 			second=False
+			count = 0
 			for p in temp_pu:
-				if first:
+				if count >= 2:
+					break
+				elif first:
+					count += 1
 					self.arg1 = p
 					first=False
 					second=True
 				elif second:
+					count += 1
 					self.arg2 = p
 					second=False
 				else:
