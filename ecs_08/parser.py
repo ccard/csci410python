@@ -130,15 +130,15 @@ class Parser:
 
 		elif re.search('^call .*',self.line) is not None:
 			self.cType = self.call_type
-			temp_c = re.search('(^call\s+)(.+)(\s+)(.+)',self.line)
+			temp_c = re.search('(^call\s+)([A-Za-z0-9\.\_\:\$]+)(\s+)([0-9]+)(.*)',self.line)
 			self.arg1 = temp_c.group(2)
 			self.arg2 = temp_c.group(4)
+			print('this is call1 '+self.arg1+' with # arg '+self.arg2)
 
 		elif re.search('^label .*',self.line) is not None:
 			self.cType = self.lable_type
-			temp_l = re.search('(^label\s+)(.*)',self.line)
+			temp_l = re.search('(^label\s+)([A-Za-z0-9\_\.\:\$]*)([\s\/.]*)',self.line)
 			self.arg1 = temp_l.group(2)
-			print('this is label '+self.arg1)
 
 		elif re.search('^return',self.line) is not None:
 			self.cType = self.ret_type;
