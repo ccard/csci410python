@@ -1,1 +1,1 @@
-This is my python assignment library
+This is my python assignment library for CSCI410
