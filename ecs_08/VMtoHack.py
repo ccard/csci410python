@@ -115,8 +115,11 @@ if is_dir:
 				print('this is funct '+par.arg_1()+' with # arg'+par.arg_2())
 				writer.writeFunction(par.arg_1(),par.arg_2())
 
-			elif goto_type in cType:
+			elif if_type in cType:
 				writer.writeIf(par.arg_1())
+
+			elif goto_type in cType:
+				writer.writeGoto(par.arg_1())
 
 			elif lable_type in cType:
 				writer.writeLabel(par.arg_1())
