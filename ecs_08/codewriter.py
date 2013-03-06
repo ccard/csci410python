@@ -428,7 +428,7 @@ class CodeWriter:
 				self.outfile.write(temp_s)
 			else:
 				if 'static' in segment:
-					temp_s += "@"+self.currFunct+"."+index+"\n"
+					temp_s += "@"+self.currFunct+"."+index+"\n" #error here Ned to make class dependent function independent
 					temp_s += "D=M\n\n"
 					temp_s += "@SP\n"
 					temp_s += "AM=M+1\n"
