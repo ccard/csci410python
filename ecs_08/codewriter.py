@@ -156,6 +156,11 @@ class CodeWriter:
 		temp_s += '0;JMP\n\n'
 
 		temp_s += '('+ret+')\n\n'
+
+		if 'Sys.init' in functionName:
+			temp_s += '@Sys.WHILE\n'
+			temp_s += '0;JMP\n\n'
+
 		self.outfile.write(temp_s)
 
 	#--------------------------------------------------------------------------
