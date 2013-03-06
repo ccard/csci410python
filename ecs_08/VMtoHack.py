@@ -112,6 +112,7 @@ if is_dir:
 					writer.writePushPop(cType,par.arg_1(),par.arg_2())
 
 			elif funct_type in cType:
+				print('this is funct '+par.arg_1()+' with # arg'+par.arg_2())
 				writer.writeFunction(par.arg_1(),par.arg_2())
 
 			elif goto_type in cType:
