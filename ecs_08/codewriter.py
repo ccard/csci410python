@@ -61,9 +61,8 @@ class CodeWriter:
 		temp_s += 'D=A\n\n'
 		temp_s += '@SP\n'
 		temp_s += 'M=D\n\n'
-		temp_s += '@Sys.int\n'
-		temp_s += '0;JMP\n\n'
 		self.outfile.write(temp_s)
+		self.writeCall('Sys.init','0')
 
 	#--------------------------------------------------------------------------
 	#This writes a label to the file
