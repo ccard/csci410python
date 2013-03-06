@@ -22,7 +22,7 @@ class CodeWriter:
 
 	#the file and current function
 	fileName=''
-	currFunct=''
+	currFunct='boot'
 
 	#jump counters
 	eq_jump=0
@@ -74,7 +74,7 @@ class CodeWriter:
 	# This grites a goto statement
 	def writeGoto(self,label):
 		temp_s = '@'+self.fileName+'.'+label+'\n'
-		temp_s += '0; JMP\n\n'
+		temp_s += '0;JMP\n\n'
 		self.outfile.write(temp_s)
 
 	#--------------------------------------------------------------------------
@@ -248,6 +248,7 @@ class CodeWriter:
 	# this wirtes the code for a function
 	def writeFunction(self, functionName, numLocals):
 		temp = int(numLocals)
+		self.currFunct = functionName
 		self.outfile.write('('+functionName+')\n\n')
 		self.outfile.write('//zero local values\n')
 		for i in range(0,temp):
@@ -426,7 +427,15 @@ class CodeWriter:
 				temp_s += "M=D\n\n"
 				self.outfile.write(temp_s)
 			else:
-				if 'temp' in segment or 'static' in segment or 'pointer' in segment:
+				if 'static' in segment:
+					temp_s += "@"+self.currFunct+"."+index+"\n"
+					temp_s += "D=M\n\n"
+					temp_s += "@SP\n"
+					temp_s += "AM=M+1\n"
+					temp_s += "A=A-1\n"
+					temp_s += "M=D\n\n"
+					self.outfile.write(temp_s)
+				elif 'temp' in segment or 'pointer' in segment:
 					temp_s += "@"+index+"\n"
 					temp_s += "D=A\n\n"
 					temp_s += "@"+self.locat[segment]+"\n"
@@ -455,7 +464,14 @@ class CodeWriter:
 				temp_s += "M=M-1\n\n"
 				self.outfile.write(temp_s)
 			else:
-				if 'temp' in segment or 'static' in segment or 'pointer' in segment:
+				if 'static' in segment:
+					temp_s += "@SP\n"
+					temp_s += "M=M-1\n"
+					temp_s += "A=M\n"
+					temp_s += "D=M\n\n"
+					temp_s += "@"+self.currFunct+"."+index+"\n"
+					temp_s += "M=D\n\n"
+				elif 'temp' in segment or 'pointer' in segment:
 					temp_s += "@"+index+"\n"
 					temp_s += "D=A\n\n"
 					temp_s += "@"+self.locat[segment]+"\n"
