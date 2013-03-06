@@ -174,7 +174,9 @@ class CodeWriter:
 
 		temp_s += '//gets the return address\n'
 		temp_s += '@5\n'
-		temp_s += 'D=D-A\n\n'
+		temp_s += 'D=D-A\n'
+		temp_s += 'A=D\n'
+		temp_s += 'D=M\n\n'
 		temp_s += '@R14\n'
 		temp_s += 'M=D\n\n'
 
