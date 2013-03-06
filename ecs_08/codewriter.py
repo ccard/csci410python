@@ -193,7 +193,9 @@ class CodeWriter:
 		temp_s += '@R13\n'
 		temp_s += 'D=M\n\n'
 		temp_s += '@1\n'
-		temp_s += 'D=D-A\n\n'
+		temp_s += 'D=D-A\n'
+		temp_s += 'A=D\n'
+		temp_s += 'D=M\n\n'
 		temp_s += '@THAT\n'
 		temp_s += 'M=D\n\n'
 
@@ -201,7 +203,9 @@ class CodeWriter:
 		temp_s += '@R13\n'
 		temp_s += 'D=M\n\n'
 		temp_s += '@2\n'
-		temp_s += 'D=D-A\n\n'
+		temp_s += 'D=D-A\n'
+		temp_s += 'A=D\n'
+		temp_s += 'D=M\n\n'
 		temp_s += '@THIS\n'
 		temp_s += 'M=D\n\n'
 
@@ -209,7 +213,9 @@ class CodeWriter:
 		temp_s += '@R13\n'
 		temp_s += 'D=M\n\n'
 		temp_s += '@3\n'
-		temp_s += 'D=D-A\n\n'
+		temp_s += 'D=D-A\n'
+		temp_s += 'A=D\n'
+		temp_s += 'D=M\n\n'
 		temp_s += '@ARG\n'
 		temp_s += 'M=D\n\n'
 
@@ -217,7 +223,9 @@ class CodeWriter:
 		temp_s += '@R13\n'
 		temp_s += 'D=M\n\n'
 		temp_s += '@4\n'
-		temp_s += 'D=D-A\n\n'
+		temp_s += 'D=D-A\n'
+		temp_s += 'A=D\n'
+		temp_s += 'D=M\n\n'
 		temp_s += '@LCL\n'
 		temp_s += 'M=D\n\n'
 
