@@ -130,13 +130,16 @@ class Parser:
 
 		elif re.search('^call .*',self.line) is not None:
 			self.cType = self.call_type
+			#reviesed regex that gets that ensures that any comments at the EOL
+			#aren't included in the function name
 			temp_c = re.search('(^call\s+)([A-Za-z0-9\.\_\:\$]+)(\s+)([0-9]+)(.*)',self.line)
 			self.arg1 = temp_c.group(2)
 			self.arg2 = temp_c.group(4)
-			print('this is call1 '+self.arg1+' with # arg '+self.arg2)
 
 		elif re.search('^label .*',self.line) is not None:
 			self.cType = self.lable_type
+			#This ensures any comments at EOL aren't captured as part of the
+			#label
 			temp_l = re.search('(^label\s+)([A-Za-z0-9\_\.\:\$]*)([\s\/.]*)',self.line)
 			self.arg1 = temp_l.group(2)
 
