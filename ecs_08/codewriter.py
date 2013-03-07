@@ -20,41 +20,42 @@ class CodeWriter:
 	ret_type='C_RETURN'
 	call_type='C_CALL'
 
-	#the file and current function
+	#The current file being parsed
 	fileName=''
-	currFunct='boot'
+
 
 	#jump counters
 	eq_jump=0
 	lt_jump=0
 	gt_jump=0
 
-	#table for translating locations
+	#Table for translating locations
 	locat = {'local':'LCL', 'argument':'ARG','this':'THIS',
 			'that':'THAT', 'pointer':'3', 'temp':'5', 'static':'16'}
 
-	#table for function return counts
+	#Table for function return counts
 	functRetC = {'i':0}
 
 
 	#--------------------------------------------------------------------------
-	#the constructor
+	# The constructor
 	def __init__(self, fileout):
 		self.outfile = open(fileout, 'w')
 		
 
 	#--------------------------------------------------------------------------
-	#closes the current file
+	# Closes the current file
 	def Close(self):
 		self.outfile.close()
 
 	#--------------------------------------------------------------------------
-	#opens new outfile
+	# This sets the filename to the new file being parsed
 	def setFileName(self, fileout):
 		self.fileName = fileout
 
 	#--------------------------------------------------------------------------
-	#This boot straps the flie
+	# This bootstraps the flie i.e. initializing the sp pointer and calling
+	# sys.init
 	def writeInit(self):
 		temp_s = '//Bootstrapping\n'
 		temp_s += '@256\n'
@@ -65,20 +66,22 @@ class CodeWriter:
 		self.writeCall('Sys.init','0')
 
 	#--------------------------------------------------------------------------
-	#This writes a label to the file
+	# This writes a label to the file with file name prepended to make more
+	# unique
 	def writeLabel(self, label):
 		temp_s = '('+self.fileName+'.'+label+')\n\n'
 		self.outfile.write(temp_s)
 
 	#--------------------------------------------------------------------------
-	# This grites a goto statement
+	# This grites a goto statement or a mandatory jump
 	def writeGoto(self,label):
 		temp_s = '@'+self.fileName+'.'+label+'\n'
 		temp_s += '0;JMP\n\n'
 		self.outfile.write(temp_s)
 
 	#--------------------------------------------------------------------------
-	# This writes a if-goto statment
+	# This writes a if-goto statment when the element on the top of the
+	# stack is not 0
 	def writeIf(self,label):
 		temp_s = '//if statment\n'
 		temp_s += '@SP\n'
@@ -90,8 +93,12 @@ class CodeWriter:
 		self.outfile.write(temp_s)
 
 	#--------------------------------------------------------------------------
-	# This writes the call of a function function
+	# This writes the call of a function with number of arguments to pass to 
+	# it and saves all relvent pointers to the stack and then resets
+	# SP to the new location for the function
 	def writeCall(self, functionName, numArgs):
+		#This keeps count of the number of returns of a function to
+		#ensure that it returns to the proper place in code
 		temp = 0
 		if functionName in self.functRetC:
 			temp = self.functRetC[functionName]
@@ -103,6 +110,7 @@ class CodeWriter:
 
 		temp_s = "//calls function "+functionName+'\n'
 		self.outfile.write(temp_s)
+		#pushes return value onto the stack
 		self.writePushPop(self.push_type,'constant',ret)
 		temp_s = '//saves local to stack\n'
 		temp_s += "@LCL\n"
@@ -157,6 +165,9 @@ class CodeWriter:
 
 		temp_s += '('+ret+')\n\n'
 
+		#if it is the call to sys.init then at the begining of file
+		#and need to make sure to goto the infinite while loop at the
+		#end and not repeate code
 		if 'Sys.init' in functionName:
 			temp_s += '@Sys.WHILE\n'
 			temp_s += '0;JMP\n\n'
@@ -166,7 +177,7 @@ class CodeWriter:
 	#--------------------------------------------------------------------------
 	# This writes the return call of the function
 	def writeReturn(self):
-		temp_s = '//return of the function\n'
+		temp_s = '//return frame of the function\n'
 		temp_s += '@LCL\n'
 		temp_s += 'D=M\n\n'
 		temp_s += '@R13\n'
@@ -245,18 +256,20 @@ class CodeWriter:
 		self.outfile.write(temp_s)
 
 	#--------------------------------------------------------------------------
-	# this wirtes the code for a function
+	# This wirtes the code for a function label
 	def writeFunction(self, functionName, numLocals):
 		temp = int(numLocals)
 		self.currFunct = functionName
 		self.outfile.write('('+functionName+')\n\n')
 		self.outfile.write('//zero local values\n')
+		#loops through numLocals times to 0 out the lcl block
+		#and to position the sp to the new location after lcl block
 		for i in range(0,temp):
 			self.writePushPop(self.push_type,'constant','0')
 
 
 	#--------------------------------------------------------------------------
-	# writes arithmatic commands
+	# Writes arithmatic commands
 	def writeArithmetic(self, command):
 		if 'add' in command:
 			temp_s = "//This is the add command\n"
@@ -414,7 +427,7 @@ class CodeWriter:
 			self.outfile.write(temp_s)
 
 	#--------------------------------------------------------------------------
-	#writes appropriate push pop commands
+	# Writes appropriate push pop commands
 	def writePushPop(self, cType, segment, index):
 		if self.push_type in cType:
 			temp_s = "//This is the push command\n"
@@ -426,15 +439,17 @@ class CodeWriter:
 				temp_s += "A=A-1\n"
 				temp_s += "M=D\n\n"
 				self.outfile.write(temp_s)
+
 			else:
 				if 'static' in segment:
-					temp_s += "@"+self.fileName+"$static."+index+"\n" #error here Ned to make class dependent function independent
+					temp_s += "@"+self.fileName+"$static."+index+"\n"
 					temp_s += "D=M\n\n"
 					temp_s += "@SP\n"
 					temp_s += "AM=M+1\n"
 					temp_s += "A=A-1\n"
 					temp_s += "M=D\n\n"
 					self.outfile.write(temp_s)
+
 				elif 'temp' in segment or 'pointer' in segment:
 					temp_s += "@"+index+"\n"
 					temp_s += "D=A\n\n"
@@ -446,6 +461,7 @@ class CodeWriter:
 					temp_s += "A=A-1\n"
 					temp_s += "M=D\n\n"
 					self.outfile.write(temp_s)
+
 				else:
 					temp_s += "@"+index+"\n"
 					temp_s += "D=A\n\n"
@@ -457,8 +473,10 @@ class CodeWriter:
 					temp_s += "A=A-1\n"
 					temp_s += "M=D\n\n"
 					self.outfile.write(temp_s)
+
 		else:
 			temp_s = "//This is the pop command\n"
+			#pops constant off stack which is just modifing sp = sp-1
 			if 'constant' in segment:
 				temp_s += "@SP\n"
 				temp_s += "M=M-1\n\n"
@@ -472,6 +490,7 @@ class CodeWriter:
 					temp_s += "@"+self.fileName+"$static."+index+"\n"
 					temp_s += "M=D\n\n"
 					self.outfile.write(temp_s)
+
 				elif 'temp' in segment or 'pointer' in segment:
 					temp_s += "@"+index+"\n"
 					temp_s += "D=A\n\n"
@@ -487,6 +506,7 @@ class CodeWriter:
 					temp_s += "A=M\n"
 					temp_s += "M=D\n\n"
 					self.outfile.write(temp_s)
+
 				else:
 					temp_s += "@"+index+"\n"
 					temp_s += "D=A\n\n"
