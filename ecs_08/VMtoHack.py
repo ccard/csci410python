@@ -74,19 +74,20 @@ else:
 # Main
 #------------------------------------------------------------------------------
 
-#for directories passed in
+#For directories passed in
 if is_dir:
 	cur_dir = os.getcwd()
 	temp_dir = re.search('([\/"\\"]{1})([A-Za-z0-9\.\_\-\s]*$)',cur_dir)
 	fileName = temp_dir.group(2)+'.asm'
+	#opens the file named after the directory with .asm appended
 	writer = CodeWriter(cur_dir+'/'+fileName)
 	writer.writeInit()
 	for d in directory:
-		#Strips .vm of the end and adds .asm
+		#Strips .vm of the end to get the file name
 		temp_out=re.search('(.*[\.\/]+)(.*)(\.vm)',d)
 		out_file = temp_out.group(2)
 
-		#opens the output file
+		#sets current file name
 		writer.setFileName(out_file)
 
 		#opens the input file
@@ -112,7 +113,6 @@ if is_dir:
 					writer.writePushPop(cType,par.arg_1(),par.arg_2())
 
 			elif funct_type in cType:
-				print('this is funct '+par.arg_1()+' with # arg'+par.arg_2())
 				writer.writeFunction(par.arg_1(),par.arg_2())
 
 			elif if_type in cType:
@@ -132,7 +132,7 @@ if is_dir:
 
 	writer.Close()
 
-#this is for a single file
+#This is for a single file
 else:
 	writer = CodeWriter(out_file)
 	writer.writeInit()
