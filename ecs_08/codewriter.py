@@ -471,6 +471,7 @@ class CodeWriter:
 					temp_s += "D=M\n\n"
 					temp_s += "@"+self.fileName+"$static."+index+"\n"
 					temp_s += "M=D\n\n"
+					self.outfile.write(temp_s)
 				elif 'temp' in segment or 'pointer' in segment:
 					temp_s += "@"+index+"\n"
 					temp_s += "D=A\n\n"
