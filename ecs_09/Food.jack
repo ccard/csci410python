@@ -8,7 +8,7 @@ class Food{
 	{
 		let x = Ax;
 		let y = Ay;
-		let size = 5;
+		let size = 10;
 		return this;
 	}
 
@@ -29,8 +29,38 @@ class Food{
 
     method void set_xy(int Ax, int Ay)
     {
-    	let x = Ax;
-    	let y = Ay;
+        if(Ax > 1)
+        {
+            if(Ax+size < 510)
+            {
+                let x = Ax;
+            }
+            else
+            {
+                let x = 50;
+            }
+        }
+        else
+        {
+            let x = 50;
+        }
+
+        if(Ay > 1)
+        {
+            if(Ay+size < 254)
+            {
+                let y = Ay;
+            }
+            else
+            {
+                let y = 50;
+            }
+        }
+        else
+        {
+            let y = 50;
+        }
+
     	return;
     }
 
