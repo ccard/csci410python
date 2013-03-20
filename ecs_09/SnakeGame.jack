@@ -1,14 +1,14 @@
 // This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/09/Square/SquareGame.jack
+// File name: projects/09/Snake/SquareGame.jack
 
 /**
- * Implements the Square Dance game.
- * In this game you can move a black square around the screen and
+ * Implements the Snake Dance game.
+ * In this game you can move a black Snake around the screen and
  * change its size during the movement.
- * In the beginning, the square is located at the top-left corner
- * of the screen. The arrow keys are used to move the square.
+ * In the beginning, the Snake is located at the top-left corner
+ * of the screen. The arrow keys are used to move the Snake.
  * The 'z' & 'x' keys are used to decrement and increment the size.
  * The 'q' key is used to quit the game.
  */
@@ -23,12 +23,12 @@ class SnakeGame {
 
     field int fedMove;
 
-    // The square's movement direction
+    // The Snake's movement direction
     field int direction; // 0=none,1=up,2=down,3=left,4=right
 
-    /** Constructs a new Square Game. */
+    /** Constructs a new Snake Game. */
     constructor SnakeGame new() {
-        let snake = Snake.new(0, 0, 30);
+        let snake = Snake.new(100, 100, 30);
         let feed = Food.new(50,50);
         let direction = 0;
         let fedMove = 5;
@@ -38,14 +38,14 @@ class SnakeGame {
 
     /** Deallocates the object's memory. */
     method void dispose() {
-        do square.dispose();
+        do snake.dispose();
         do feed.dispose();
         do Memory.deAlloc(this);
         return;
     }
 
     /** Starts the game. Handles inputs from the user that control
-     *  the square's movement, direction and size. */
+     *  the Snake's movement, direction and size. */
     method void run() {
         var char key;
         var boolean exit;
@@ -59,14 +59,28 @@ class SnakeGame {
             while (key = 0) {
                 let key = Keyboard.keyPressed();
                 do moveSnake();
+                if(snake.end_game())
+                {
+                    return;
+                }
                 do feed.draw();
                 if (containsX() & containsY())
                 { 
-                    do Output.printString("hi there");
                     do feed.set_xy(feed.getX()+fedMove,feed.getY()+fedMove);
                     let fedMove = fedMove*3;
                     let fedMove = fedMove/2;
                     let fedMove = (~fedMove)+1;
+                    if(fedMove > 200)
+                    {
+                        let fedMove = 5;
+                    }
+                    else
+                    {
+                        if(fedMove < -200)
+                        {
+                            let fedMove = 5;
+                        }
+                    }
                     do incSpeed();
                     do feed.erase();
                     do feed.draw();
@@ -93,14 +107,28 @@ class SnakeGame {
             while (~(key = 0)) {
                 let key = Keyboard.keyPressed();
                 do moveSnake();
+                if(snake.end_game())
+                {
+                    return;
+                }
                 do feed.draw();
                 if (containsX() & containsY())
                 { 
-                    do Output.printString("hi there");
                     do feed.set_xy(feed.getX()+fedMove,feed.getY()+fedMove);
                     let fedMove = fedMove*3;
                     let fedMove = fedMove/2;
                     let fedMove = (~fedMove)+1;
+                    if(fedMove > 200)
+                    {
+                        let fedMove = 5;
+                    }
+                    else
+                    {
+                        if(fedMove < -200)
+                        {
+                            let fedMove = 5;
+                        }
+                    }
                     do incSpeed();
                     do feed.erase();
                     do feed.draw();
@@ -112,7 +140,11 @@ class SnakeGame {
 
     method void incSpeed()
     {
-        let speed = speed - 4;
+        let speed = speed - 2;
+        if(speed < 1)
+        {
+            let speed = 5;
+        }
         return;
     }
 
@@ -194,7 +226,7 @@ class SnakeGame {
         return less;
     }
 
-    /** Moves the square by 2 pixels in the current direction. */
+    /** Moves the Snake by 2 pixels in the current direction. */
     method void moveSnake() {
         if (direction = 1) {
             do snake.moveUp();
