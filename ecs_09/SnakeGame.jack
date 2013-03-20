@@ -14,8 +14,10 @@
  */
 class SquareGame {
 
-    // The square
-    field Square square;
+    // The snake
+    field Snake snake;
+
+    field 
 
     // The square's movement direction
     field int direction; // 0=none,1=up,2=down,3=left,4=right
@@ -53,12 +55,6 @@ class SquareGame {
             if (key = 81) {
                 let exit = true;
             }
-            if (key = 90) {
-                do square.decSize();
-            }
-            if (key = 88) {
-                do square.incSize();
-            }
             if (key = 131) {
                 let direction = 1;
             }
@@ -85,16 +81,16 @@ class SquareGame {
     /** Moves the square by 2 pixels in the current direction. */
     method void moveSquare() {
         if (direction = 1) {
-            do square.moveUp();
+            do snake.moveUp();
         }
         if (direction = 2) {
-            do square.moveDown();
+            do snake.moveDown();
         }
         if (direction = 3) {
-            do square.moveLeft();
+            do snake.moveLeft();
         }
         if (direction = 4) {
-            do square.moveRight();
+            do snake.moveRight();
         }
 
         do Sys.wait(5); // Delays the next movement.
