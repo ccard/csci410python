@@ -12,12 +12,14 @@
  * The 'z' & 'x' keys are used to decrement and increment the size.
  * The 'q' key is used to quit the game.
  */
-class SquareGame {
+class SnakeGame {
 
     // The snake
     field Snake snake;
 
     field Food feed;
+
+    field int speed;
 
     field int fedMove;
 
@@ -25,12 +27,12 @@ class SquareGame {
     field int direction; // 0=none,1=up,2=down,3=left,4=right
 
     /** Constructs a new Square Game. */
-    constructor SquareGame new() {
-        let square = Square.new(0, 0, 30);
-        let feed = Food.new(30,30);
+    constructor SnakeGame new() {
+        let snake = Snake.new(0, 0, 30);
+        let feed = Food.new(50,50);
         let direction = 0;
         let fedMove = 5;
-
+        let speed = 50;
         return this;
     }
 
@@ -48,6 +50,8 @@ class SquareGame {
         var char key;
         var boolean exit;
 
+        do feed.draw();
+
         let exit = false;
 
         while (~exit) {
@@ -55,16 +59,17 @@ class SquareGame {
             while (key = 0) {
                 let key = Keyboard.keyPressed();
                 do moveSnake();
-                f (snake.getX() <= feed.getX() & feed.getX() <= (snake.getX()+snake.getSize()) )
-                {
-                    if (snake.getY() <= feed.getY() & feed.getY() <= (snake.getY()+snake.getSize()) )
-                    {
-                        feed.set_xy(feed.getX()*fedMove,feed.getY()*fedMove);
-                        let fedMove = fedMove*3;
-                        let fedMove = fedMove/2;
-                        let fedMove = (~fedMove)+1;
-                        snake.incSpeed();
-                    }                
+                do feed.draw();
+                if (containsX() & containsY())
+                { 
+                    do Output.printString("hi there");
+                    do feed.set_xy(feed.getX()+fedMove,feed.getY()+fedMove);
+                    let fedMove = fedMove*3;
+                    let fedMove = fedMove/2;
+                    let fedMove = (~fedMove)+1;
+                    do incSpeed();
+                    do feed.erase();
+                    do feed.draw();
                 }
             }
 
@@ -88,22 +93,106 @@ class SquareGame {
             while (~(key = 0)) {
                 let key = Keyboard.keyPressed();
                 do moveSnake();
-                if (snake.getX() <= feed.getX() & feed.getX() <= (snake.getX()+snake.getSize()) )
-                {
-                    if (snake.getY() <= feed.getY() & feed.getY() <= (snake.getY()+snake.getSize()) )
-                    {
-                        feed.set_xy(feed.getX()*fedMove,feed.getY()*fedMove);
-                        let fedMove = fedMove*3;
-                        let fedMove = fedMove/2;
-                        let fedMove = (~fedMove)+1;
-                        snake.incSpeed();
-                    }                
+                do feed.draw();
+                if (containsX() & containsY())
+                { 
+                    do Output.printString("hi there");
+                    do feed.set_xy(feed.getX()+fedMove,feed.getY()+fedMove);
+                    let fedMove = fedMove*3;
+                    let fedMove = fedMove/2;
+                    let fedMove = (~fedMove)+1;
+                    do incSpeed();
+                    do feed.erase();
+                    do feed.draw();
                 }
             }
-        }
-            
+        }   
         return;
-	}
+    }
+
+    method void incSpeed()
+    {
+        let speed = speed - 4;
+        return;
+    }
+
+    method boolean containsX()
+    {
+        var int temp;
+        var boolean less;
+        var boolean greater;
+        var boolean equal;
+        let less = false;
+        let greater = false;
+        let equal = false;
+        if(snake.getX() < feed.getX())
+        {
+            let greater = true;
+        }
+        else
+        {
+            if(snake.getX() = feed.getX())
+            {
+                let equal = true;
+            }
+        }
+
+        let temp = snake.getX()+snake.getSize();
+        if(feed.getX() < temp)
+        {
+            let less = true;
+        }
+        else
+        {
+            if(temp = feed.getX())
+            {
+                let equal = true;
+            }
+        }
+
+        let less = less & greater;
+        let less = less | equal;
+        return less;
+    }
+
+    method boolean containsY()
+    {
+        var int temp;
+        var boolean less;
+        var boolean greater;
+        var boolean equal;
+        let less = false;
+        let greater = false;
+        let equal = false;
+        if(snake.getY() < feed.getY())
+        {
+            let greater = true;
+        }
+        else
+        {
+            if(snake.getY() = feed.getY())
+            {
+                let equal = true;
+            }
+        }
+
+        let temp = snake.getY()+snake.getSize();
+        if(feed.getY() < temp)
+        {
+            let less = true;
+        }
+        else
+        {
+            if(temp = feed.getY())
+            {
+                let equal = true;
+            }
+        }
+
+        let less = less & greater;
+        let less = less | equal;
+        return less;
+    }
 
     /** Moves the square by 2 pixels in the current direction. */
     method void moveSnake() {
@@ -120,7 +209,7 @@ class SquareGame {
             do snake.moveRight();
         }
 
-        do Sys.wait(5); // Delays the next movement.
+        do Sys.wait(speed); // Delays the next movement.
         return;
     }
 }
