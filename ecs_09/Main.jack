@@ -14,8 +14,8 @@ class Main {
 
         let game = SnakeGame.new();
         do game.run();
-	do game.dispose();
-
+		do game.dispose();
+		do Output.printString("Game Over!");
         return;
     }
 }
