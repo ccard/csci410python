@@ -16,15 +16,22 @@ class Snake {
     // The size of the square
     field int size;
 
+    field boolean end;
+
     /** Constructs a new square with a given location and size. */
     constructor Snake new(int Ax, int Ay, int Asize) {
         let x = Ax;
         let y = Ay;
         let size = Asize;
-
+        let end = false;
         do draw();
 
         return this;
+    }
+
+    method boolean end_game()
+    {
+        return end;
     }
 
     method int getX()
@@ -91,6 +98,10 @@ class Snake {
             do Screen.setColor(true);
             do Screen.drawRectangle(x, y, x + size, y + 1);
         }
+        else
+        {
+            let end = true;
+        }
         return;
     }
 
@@ -102,6 +113,10 @@ class Snake {
             let y = y + 2;
             do Screen.setColor(true);
             do Screen.drawRectangle(x, (y + size) - 1, x + size, y + size);
+        }
+        else
+        {
+            let end = true;
         }
         return;
     }
@@ -115,6 +130,10 @@ class Snake {
             do Screen.setColor(true);
             do Screen.drawRectangle(x, y, x + 1, y + size);
         }
+        else
+        {
+            let end = true;
+        }
         return;
     }
 
@@ -126,6 +145,10 @@ class Snake {
             let x = x + 2;
             do Screen.setColor(true);
             do Screen.drawRectangle((x + size) - 1, y, x + size, y + size);
+        }
+        else
+        {
+            let end = true;
         }
         return;
     }
