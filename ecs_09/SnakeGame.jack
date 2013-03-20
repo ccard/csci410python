@@ -17,7 +17,9 @@ class SquareGame {
     // The snake
     field Snake snake;
 
-    field 
+    field Food feed;
+
+    field int fedMove;
 
     // The square's movement direction
     field int direction; // 0=none,1=up,2=down,3=left,4=right
@@ -25,7 +27,9 @@ class SquareGame {
     /** Constructs a new Square Game. */
     constructor SquareGame new() {
         let square = Square.new(0, 0, 30);
+        let feed = Food.new(30,30);
         let direction = 0;
+        let fedMove = 5;
 
         return this;
     }
@@ -33,6 +37,7 @@ class SquareGame {
     /** Deallocates the object's memory. */
     method void dispose() {
         do square.dispose();
+        do feed.dispose();
         do Memory.deAlloc(this);
         return;
     }
@@ -49,7 +54,7 @@ class SquareGame {
             // waits for a key to be pressed.
             while (key = 0) {
                 let key = Keyboard.keyPressed();
-                do moveSquare();
+                do moveSnake();
             }
 
             if (key = 81) {
@@ -71,7 +76,14 @@ class SquareGame {
             // waits for the key to be released.
             while (~(key = 0)) {
                 let key = Keyboard.keyPressed();
-                do moveSquare();
+                do moveSnake();
+                if (snake.getX() <= feed.getX() & feed.getX() <= (snake.getX()+snake.getSize()) )
+                {
+                    if (snake.getY() <= feed.getY() & feed.getY() <= (snake.getY()+snake.getSize()) )
+                    {
+                        feed.set_xy(feed.getX()*fedMove,feed.getY()*fedMove);
+                    }                
+                }
             }
         }
             
@@ -79,7 +91,7 @@ class SquareGame {
 	}
 
     /** Moves the square by 2 pixels in the current direction. */
-    method void moveSquare() {
+    method void moveSnake() {
         if (direction = 1) {
             do snake.moveUp();
         }
