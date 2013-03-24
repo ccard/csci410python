@@ -65,9 +65,11 @@ class SnakeGame {
                 {
                     return;
                 }
+                //checks to see if the snake has etain the food
                 if (containsX() & containsY())
                 { 
                     do feed.set_xy(feed.getX()+fedMove,feed.getY()+fedMove);
+                    //sudo randomly modifies the foods next location
                     let fedMove = fedMove*3;
                     let fedMove = fedMove/2;
                     let fedMove = (~fedMove)+1;
@@ -118,6 +120,7 @@ class SnakeGame {
                 if (containsX() & containsY())
                 { 
                     do feed.set_xy(feed.getX()+fedMove,feed.getY()+fedMove);
+                    //sudo randomly modifies the foods next location
                     let fedMove = fedMove*3;
                     let fedMove = fedMove/2;
                     let fedMove = (~fedMove)+1;
@@ -141,6 +144,7 @@ class SnakeGame {
         return;
     }
 
+    //increase the speed by decreasing the time the system waits
     method void incSpeed()
     {
         let speed = speed - 2;
@@ -151,6 +155,7 @@ class SnakeGame {
         return;
     }
 
+    //returns true if the x cordinate of the food is containd within
     method boolean containsX()
     {
         var int temp;
@@ -190,6 +195,7 @@ class SnakeGame {
         return less;
     }
 
+    //returns true if the x cordinate of the food is containd within
     method boolean containsY()
     {
         var int temp;

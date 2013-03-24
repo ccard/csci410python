@@ -1,3 +1,4 @@
+//This class contains the food that the snake eats
 class Food{
 	
 	field int size;
@@ -27,6 +28,8 @@ class Food{
         return size;
     }
 
+    //sets the foods x and y cordinates and resets them if they end up 
+    //leaving the screen
     method void set_xy(int Ax, int Ay)
     {
         if(Ax > 1)

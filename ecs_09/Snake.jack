@@ -98,6 +98,7 @@ class Snake {
             do Screen.setColor(true);
             do Screen.drawRectangle(x, y, x + size, y + 1);
         }
+        //if it leveas the boundery of the screen then game over
         else
         {
             let end = true;
@@ -114,6 +115,7 @@ class Snake {
             do Screen.setColor(true);
             do Screen.drawRectangle(x, (y + size) - 1, x + size, y + size);
         }
+        //if it leveas the boundery of the screen then game over
         else
         {
             let end = true;
@@ -130,6 +132,7 @@ class Snake {
             do Screen.setColor(true);
             do Screen.drawRectangle(x, y, x + 1, y + size);
         }
+        //if it leveas the boundery of the screen then game over
         else
         {
             let end = true;
@@ -146,6 +149,7 @@ class Snake {
             do Screen.setColor(true);
             do Screen.drawRectangle((x + size) - 1, y, x + size, y + size);
         }
+        //if it leveas the boundery of the screen then game over
         else
         {
             let end = true;
