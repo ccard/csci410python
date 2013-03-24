@@ -32,8 +32,10 @@ class Food{
     //leaving the screen
     method void set_xy(int Ax, int Ay)
     {
+        //right screen bound check
         if(Ax > 1)
         {
+            //left screen bound check
             if(Ax+size < 510)
             {
                 let x = Ax;
@@ -48,8 +50,10 @@ class Food{
             let x = 50;
         }
 
+        //top screen bound check
         if(Ay > 1)
         {
+            //bottom screen bound check
             if(Ay+size < 254)
             {
                 let y = Ay;

@@ -4,12 +4,11 @@
 // File name: projects/09/Snake/SquareGame.jack
 
 /**
- * Implements the Snake Dance game.
- * In this game you can move a black Snake around the screen and
- * change its size during the movement.
- * In the beginning, the Snake is located at the top-left corner
+ * Implements the Snake game.
+ * In this game you can move a black Snake around the screen.
+ * In the beginning, the Snake is located at the top-left quadrent
  * of the screen. The arrow keys are used to move the Snake.
- * The 'z' & 'x' keys are used to decrement and increment the size.
+ * The goal is to not touch the edges as long as you can will eating the food
  * The 'q' key is used to quit the game.
  */
 class SnakeGame {
@@ -17,10 +16,13 @@ class SnakeGame {
     // The snake
     field Snake snake;
 
+    //the food to eat
     field Food feed;
 
+    //controls the amount of time the system waits
     field int speed;
 
+    //controls how the food will move afeter eaten
     field int fedMove;
 
     // The Snake's movement direction
@@ -48,7 +50,13 @@ class SnakeGame {
      *  the Snake's movement, direction and size. */
     method void run() {
         var char key;
+        //if the game is to exit because it hit the bounderies
         var boolean exit;
+
+        //this counts the number of food items that where eaten
+        var int food_count;
+
+        let food_count = 0;
 
         do feed.draw();
 
@@ -63,11 +71,15 @@ class SnakeGame {
                 do moveSnake();
                 if(snake.end_game())
                 {
+                    do Output.printString("Number food items eaten: ");
+                    do Output.printInt(food_count);
+                    do Output.printString)", ";
                     return;
                 }
-                //checks to see if the snake has etain the food
+                //checks to see if the snake has eaten the food
                 if (containsX() & containsY())
                 { 
+                    let food_count = food_count + 1;
                     do feed.set_xy(feed.getX()+fedMove,feed.getY()+fedMove);
                     //sudo randomly modifies the foods next location
                     let fedMove = fedMove*3;
@@ -84,24 +96,30 @@ class SnakeGame {
                             let fedMove = 5;
                         }
                     }
+                    //increases speed of snake and redraws the food
                     do incSpeed();
                     do feed.erase();
                     do feed.draw();
                 }
             }
 
+            //if q is pressed
             if (key = 81) {
                 let exit = true;
             }
+            //up arrow key
             if (key = 131) {
                 let direction = 1;
             }
+            //down arrow key
             if (key = 133) {
                 let direction = 2;
             }
+            //left arrow key
             if (key = 130) {
                 let direction = 3;
             }
+            //right arrow key
             if (key = 132) {
                 let direction = 4;
             }
@@ -114,11 +132,15 @@ class SnakeGame {
                 do moveSnake();
                 if(snake.end_game())
                 {
+                    do Output.printString("Number food items eaten: ");
+                    do Output.printInt(food_count);
+                    do Output.printString)", ";
                     return;
                 }
-
+                //checks to see if snake has eaten the food
                 if (containsX() & containsY())
                 { 
+                    let food_count = food_count + 1;
                     do feed.set_xy(feed.getX()+fedMove,feed.getY()+fedMove);
                     //sudo randomly modifies the foods next location
                     let fedMove = fedMove*3;
@@ -135,6 +157,7 @@ class SnakeGame {
                             let fedMove = 5;
                         }
                     }
+                    //increases speed of snake snd redraws food
                     do incSpeed();
                     do feed.erase();
                     do feed.draw();
@@ -155,7 +178,7 @@ class SnakeGame {
         return;
     }
 
-    //returns true if the x cordinate of the food is containd within
+    //returns true if the x cordinate of the food is containd within the snake
     method boolean containsX()
     {
         var int temp;
@@ -195,7 +218,7 @@ class SnakeGame {
         return less;
     }
 
-    //returns true if the x cordinate of the food is containd within
+    //returns true if the x cordinate of the food is containd within the snake
     method boolean containsY()
     {
         var int temp;
