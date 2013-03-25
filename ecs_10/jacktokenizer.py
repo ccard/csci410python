@@ -64,7 +64,20 @@ class JackToken:
 		return self.curSym
 
 	#--------------------------------------------------------------------------
-	# returns the current identifier
+	# Returns the current identifier
+	def indentifier(self):
+		return self.curIdent
+
+	#--------------------------------------------------------------------------
+	# Returns the current int val
+	def intVal(self):
+		return self.curInt
+
+	#--------------------------------------------------------------------------
+	# Returns the current string val
+	def stringVal(self):
+		return self.curString
+		
 	#--------------------------------------------------------------------------
 	# Advance reading of file
 	def advance(self):
@@ -108,4 +121,29 @@ class JackToken:
 				self.curIdent = temp.group(1)
 			self.line = re.sub('^[A-Za-z\_]+[A-Za-z\_0-9]*',' ',self.line)
 
-		elif re.search('^\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~')
+		elif re.search('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1}',self.line) is not None:
+			temp = re.search('(^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1})',self.line)
+			self.curToken = self.idents['sym']
+			self.curSym = temp.group(1)
+			self.line = re.sub('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1}',' ',self.line)
+
+		elif re.search('^[0-9]+',self.line) is not None:
+			temp = re.search('(^[0-9]+)',self.line)
+			self.curToken = self.idents['intc']
+			self.curInt = temp.group(1)
+			self.line = re.sub('^[0-9]+',' ',self.line)
+
+		elif re.search('^\".*\"',self.line) is not None:
+			temp = re.search('(^\".*\")',self.line)
+			self.curToken = self.idents['string_c']
+			self.curString = temp.group(1)
+			self.line = re.sub('^\".*\"',' ',self.line)
+
+		elif re.search('^\/\/',self.line) is not None:
+			self.line = ''
+			self.advance()
+
+		elif re.search('^\/\*\*',self.line) is not None:
+			self.line = ''
+			self.blockcom = True
+			self.advance()
