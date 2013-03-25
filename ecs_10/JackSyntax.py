@@ -42,6 +42,26 @@ ident='IDENTIFIER'
 intc='INT_CONST'
 string_c='STRING_CONST'
 
+'classb':'<class>'
+'classe':'</class>'
+'classVarDecb':'<classVarDec>'
+'classVarDece':'</classVarDec>'
+'typeb':'<type>'
+'typee':'</type>'
+'subroutineDecb':'<subroutineDec>'
+'subroutineDece':'</subroutineDec>'
+'parameterListb':'<parameterList>'
+'parameterListe':'</parameterList>'
+'subroutineBodyb':'<subroutineBody>'
+'subroutineBodye':'</subroutineBody>'
+'varDecb':'<varDec>'
+'varDece':'</varDec>'
+'classNameb':'<className>'
+'classNamee':'</className>'
+'':'<>'
+'':'<>'
+'':'<>'
+
 #------------------------------------------------------------------------------
 # Subroutines:
 #------------------------------------------------------------------------------
