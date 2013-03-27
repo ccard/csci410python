@@ -55,7 +55,8 @@ class CompilationEngine:
 		,'subroutineCalle':'</subroutineCall>','expressionListb':'<expressionList>','expressionListe':'</expressionList>','opb':'<op>','ope':'</op>'
 		,'unaryOPb':'<unaryOP>','unaryOPe':'</unaryOP>','KeywrodConstantb':'<KeywrodConstant>','KeywrodConstante':'</KeywrodConstant>'
 		,'integerConstantb':'<integerConstant>','integerConstante':'</integerConstant>','StringConstantb':'<StringConstant>','StringConstante':'</StringConstant>'
-		,'identifierb':'<identifier>','identifiere':'</identifier>','keywordb':'<keyword>','keyworde':'</keyword>'}
+		,'identifierb':'<identifier>','identifiere':'</identifier>','keywordb':'<keyword>','keyworde':'</keyword>',
+		'symbolb':'<symbol>', 'symbole':'</symbol>'}
 	
 	
 	#------------------------------------------------------------------------------
@@ -67,23 +68,115 @@ class CompilationEngine:
 	#------------------------------------------------------------------------------
 	# This method compiles the class
 	def compileClass(self):
-		self.of.write((self.space*spaceCount)+self.xml['classb'])
+		self.of.write((self.space*self.spaceCount)+self.xml['classb'])
 		self.spaceCount += 1
 		self.token.advance()
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
 			if self.keyword in tokentype:
-				key = self.token.keyWord()
-				if self.key_class in key:
-					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+key.)
+				tempkey = self.token.keyWord()
+				if self.key_class in tempkey:
+					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde'])
+				
+				elif self.key_static in tempkey or self.key_field in tempkey:
+					self.compileClassVarDec()
+
+				elif self.key_constructor in tempkey or self.key_method in tempkey or self.key_function in tempkey:
+					self.compileSubroutine()
+
+			elif self.sym in tokentype:
+				tempsym = self.token.symbol()
+				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+
+			elif self.ident in tokentype:
+				tempident = self.token.identifier()
+				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere'])
+			self.token.advance()
 
 	#------------------------------------------------------------------------------
 	# This method compiles class var dec
 	def compileClassVarDec(self):
+		self.of.write((self.space*self.spaceCount)+self.xml['classVarDecb'])
+		self.spaceCount += 1
+
+		ifSemiCol = False
+
+		while self.token.hasMoreTokens:
+			tokentype = self.token.tokenType()
+			if self.keyword in tokentype:
+				tempkey = self.token.keyWord()
+				if self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey and not ifSemiCol:
+					self.of.write((self.space*self.spaceCount)+self.xml['typeb']+tempkey.lower()+self.xml['typee'])
+
+				elif self.key_static in tempkey or self.key_field in tempkey and ifSemiCol:
+					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde'])
+
+				else:
+					break
+
+				ifSemiCol = False
+					
+			elif self.identifier in tokentype:
+				tempident = self.token.identifier()
+				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere'])
+
+			elif self.sym in tokentype:
+				tempsym = self.token.symbol()
+				if ',' in tempsym and ifSemiCol:
+					print("ERROR: syntax violation a ',' came after ';'\n")
+					sys.exit(0)
+				if re.search('[\(\)\{\}\[\]\.\+\-\*\/\&\<\>\=\~]{1}',tempsym) is not None:
+					print("ERROR: syntax violation a invalid symbol occured in var decliration section\n")
+					sys.exit(0)
+
+				if ';' in tempsym:
+					ifSemiCol = True
+				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempident+self.xml['symbole'])
+
+			self.token.advance()
+
+		self.of.write((self.space*self.spaceCount)+self.xml['classVarDece'])
+		self.spaceCount -= 1
+
 
 	#------------------------------------------------------------------------------
 	# This method compiles the subroutines
 	def compileSubroutine(self):
+		self.of.write((self.space*self.spaceCount)+self.xml['subroutineDecb'])
+		self.spaceCount += 1
+
+		while self.token.hasMoreTokens:
+			tokentype = self.token.tokenType()
+			if self.keyword in tokentype:
+				tempkey = self.token.keyWord()
+				if self.key_method in tempkey or self.key_function in tempkey or self.key_constructor in tempkey:
+					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde'])
+
+				elif self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey or self.key_void in tempkey:
+					self.of.write((self.space*self.spaceCount)+self.xml['typeb']+tempkey.lower()+self.xml['typee'])
+
+			elif self.sym in tokentype:
+				tempsym = self.token.symbol()
+				if '(' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+					self.token.advance()
+					self.compileParameterList()
+					self.of.write((self.space*self.spaceCount)+self.xml['subroutineBodyb'])
+					break
+				else:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+
+			elif self.ident in tokentype:
+				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+self.token.identifier()+self.xml['identifiere'])
+
+			self.token.advance()
+
+		self.compileVarDec()
+
+		self.compsu
+
+
+
 
 	#------------------------------------------------------------------------------
 	# This method compiles the parameter list
