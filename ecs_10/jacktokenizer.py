@@ -91,6 +91,10 @@ class JackToken:
 				self.neOf=False
 				return
 			self.line = self.line.strip()
+			
+			if len(self.line) == 0:
+				self.advance()
+
 			if re.search('^\/\/',self.line) is not None:
 				self.line = ''
 				self.advance()
