@@ -55,7 +55,7 @@ class CompilationEngine:
 		,'subroutineCalle':'</subroutineCall>','expressionListb':'<expressionList>','expressionListe':'</expressionList>','opb':'<op>','ope':'</op>'
 		,'unaryOPb':'<unaryOP>','unaryOPe':'</unaryOP>','KeywrodConstantb':'<KeywrodConstant>','KeywrodConstante':'</KeywrodConstant>'
 		,'integerConstantb':'<integerConstant>','integerConstante':'</integerConstant>','StringConstantb':'<StringConstant>','StringConstante':'</StringConstant>'
-		,'identifierb':'<identifier>','identifiere':'</identifier>'}
+		,'identifierb':'<identifier>','identifiere':'</identifier>','keywordb':'<keyword>','keyworde':'</keyword>'}
 	
 	
 	#------------------------------------------------------------------------------
@@ -67,7 +67,16 @@ class CompilationEngine:
 	#------------------------------------------------------------------------------
 	# This method compiles the class
 	def compileClass(self):
-		
+		self.of.write((self.space*spaceCount)+self.xml['classb'])
+		self.spaceCount += 1
+		self.token.advance()
+		while self.token.hasMoreTokens():
+			tokentype = self.token.tokenType()
+			if self.keyword in tokentype:
+				key = self.token.keyWord()
+				if self.key_class in key:
+					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+key.)
+
 	#------------------------------------------------------------------------------
 	# This method compiles class var dec
 	def compileClassVarDec(self):
