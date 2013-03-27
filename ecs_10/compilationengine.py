@@ -173,26 +173,136 @@ class CompilationEngine:
 
 		self.compileVarDec()
 
-		self.compsu
+		self.compileStatements()
 
+		self.of.write((self.space*self.spaceCount)+self.xml['subroutineBodye'])
 
+		self.of.write((self.space*self.spaceCount)+self.xml['subroutineDece'])
+		self.spaceCount -= 1
 
 
 	#------------------------------------------------------------------------------
 	# This method compiles the parameter list
 	def compileParameterList(self):
+		self.of.write((self.space*self.spaceCount)+self.xml['parameterListb'])
+		self.spaceCount += 1
+
+		while self.token.hasMoreTokens():
+			tokentype = self.token.tokenType()
+
+			if self.keyword in tokentype:
+				tempkey = self.token.keyWord()
+				self.of.write((self.space*self.spaceCount)+self.xml['typeb']+tempkey.lower()+self.xml['typee'])
+
+			elif self.ident in tokentype:
+				tempident = self.token.identifier()
+				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere'])
+
+			elif self.sym in tokentype:
+				tempsym = self.token.symbol()
+				if ')' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+					break
+
+				elif ',' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+
+				else:
+					print("ERROR: syntax violation in parameterlsit\n")
+					sys.exit(0)
+			
+			self.token.advance()
+
+		self.of.write((self.space*self.spaceCount)+self.xml['parameterListe'])
+		self.spaceCount -= 1
+		sys.token.advance()
+
 
 	#------------------------------------------------------------------------------
 	# This method compiles the var decliration
 	def compileVarDec(self):
+		self.of.write((self.space*self.spaceCount)+self.xml['varDecb'])
+		self.spaceCount += 1
+
+		while self.token.hasMoreTokens():
+			tokentype = self.token.tokenType()
+
+			if self.keyword in tokentype:
+				tempkey = self.token.keyWord()
+				if self.key_var in tempkey:
+					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde'])
+
+				elif or self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey:
+					self.of.write((self.space*self.spaceCount)+self.xml['typeb']+tempkey.lower()+self.xml['typee'])
+
+				else:
+					break
+
+			elif self.ident in tokentype:
+				tempident = self.token.identifier()
+				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere'])
+
+			elif self.sym in tokentype:
+				tempsym = self.token.symbol()
+				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+
+			self.token.advance()
+
+		self.of.write((self.space*self.spaceCount)+self.xml['varDece'])
+		self.spaceCount -= 1
 
 	#------------------------------------------------------------------------------
 	# This method compiles the statements
 	def compileStatements(self):
+		self.of.write((self.space*self.spaceCount)+self.xml['statementsb'])
+		self.spaceCount += 1
+
+		while self.token.hasMoreTokens():
+			tokentype = self.token.tokenType()
+
+			if self.keyword in tokentype:
+				tempkey = self.token.keyWord()
+				if self.key_let in tempkey:
+					self.compileLet()
+
+				elif self.key_if in tempkey:
+					self.compileIf()
+
+				elif self.key_while in tempkey:
+					self.compileWhile()
+
+				elif self.key_do in tempkey:
+					self.compileDo()
+
+				elif self.key_return in tempkey:
+					self.compileReturn()
+
+				else:
+					print("ERROR: syntax violation for statments of a subroutine")
+					sys.exit(0)
+			elif self.sym in tokentype:
+				tempsym = self.token.symbol()
+				if '}' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+					self.token.advance()
+					break
+				else:
+					print("ERROR: syntax violation for statments of a subroutine")
+					sys.exit(0)
+			else:
+				print("ERROR: syntax violation for statments of a subroutine")
+				sys.exit(0)
+
+			self.token.advance()
+
+		self.of.write((self.space*self.spaceCount)+self.xml['statementse'])
+		self.spaceCount -= 1
 
 	#------------------------------------------------------------------------------
 	# This method compiles the do 
 	def compileDo(self):
+		self.of.write((self.space*self.spaceCount)+self.xml['do'])
+		self.spaceCount += 1
 
 	#------------------------------------------------------------------------------
 	# This method compiles the letStatement
