@@ -40,8 +40,8 @@ out_file+=temp_out.group(1)+'T2.xml'
 token = JackToken(in_file)
 out = open(out_file,'w')
 out.write("<tokens>\n")
+token.advance()
 while token.hasMoreTokens():
-	token.advance()
 	if 'KEYWORD' in token.tokenType():
 		out.write((space*offset)+"<keyword>"+token.keyWord().lower()+"</keyword>\n")
 	elif 'SYMBOL' in token.tokenType():
@@ -57,8 +57,9 @@ while token.hasMoreTokens():
 		out.write((space*offset)+"<identifier>"+token.identifier()+"</identifier>\n")
 	elif 'INT_CONST' in token.tokenType():
 		out.write((space*offset)+"<integerConstant>"+token.intVal()+"</integerConstant>\n")
-	elif 'STRING_CONST' in tokenType():
+	elif 'STRING_CONST' in token.tokenType():
 		out.write((space*offset)+"<stringConstant>"+token.stringVal()+"</stringConstant>\n")
+	token.advance()
 
 out.write("</tokens>")
 out.close()
