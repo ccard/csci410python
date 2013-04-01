@@ -83,6 +83,7 @@ class JackToken:
 	def advance(self):
 		
 		if len(self.line) == 0 or self.blockcom:
+			self.curToken = "NULL"
 			#checks for EOF
 			temp = self.read.tell()
 			self.line = self.read.readline()
@@ -93,61 +94,68 @@ class JackToken:
 			self.line = self.line.strip()
 			
 			if len(self.line) == 0:
-				self.advance()
+				self.curToken='NULL'
 
 			if re.search('^\/\/',self.line) is not None:
 				self.line = ''
-				self.advance()
+				self.curToken='NULL'
 
 			if re.search('\*\/',self.line) is not None and self.blockcom:
 				self.blockcom = False
 				tempd = re.search('(.*\*\/)(.*)',self.line)
 				self.line = tempd.group(2)
-				self.advance()
+				self.curToken='NULL'
+
 			elif self.blockcom:
 				self.line = ''
-				self.advance()
+				self.curToken='NULL'
 
-			if re.search('^\/\*\*',self.line) is not None:
+			if re.search('^\/\*\*.*\*\/',self.line) is not None:
+				self.line = ''
+				self.curToken = 'NULL'
+			elif re.search('^\/\*\*',self.line) is not None:
 				self.line = ''
 				self.blockcom = True
-				self.advance()
-				
-		self.line = self.line.strip()
+				self.curToken='NULL'
+		else:
+			self.line = self.line.strip()
 
-		if re.search('^[A-Za-z\_]+[A-Za-z\_0-9]*',self.line) is not None:
-			temp = re.search('(^[A-Za-z\_]+[A-Za-z\_0-9]*)',self.line)
-			if temp.group(1) in self.key_words:
-				self.curToken = self.idents['key']
-				self.curKey = self.key_words[temp.group(1)]
+			if re.search('^[A-Za-z\_]+[A-Za-z\_0-9]*',self.line) is not None:
+				temp = re.search('(^[A-Za-z\_]+[A-Za-z\_0-9]*)',self.line)
+				if temp.group(1) in self.key_words:
+					self.curToken = self.idents['key']
+					self.curKey = self.key_words[temp.group(1)]
+				else:
+					self.curToken = self.idents['ident']
+					self.curIdent = temp.group(1)
+				self.line = re.sub('^[A-Za-z\_]+[A-Za-z\_0-9]*',' ',self.line)
+	
+			elif re.search('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1}',self.line) is not None:
+				temp = re.search('(^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1})',self.line)
+				self.curToken = self.idents['sym']
+				self.curSym = temp.group(1)
+				self.line = re.sub('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1}',' ',self.line)
+	
+			elif re.search('^[0-9]+',self.line) is not None:
+				temp = re.search('(^[0-9]+)',self.line)
+				self.curToken = self.idents['intc']
+				self.curInt = temp.group(1)
+				self.line = re.sub('^[0-9]+',' ',self.line)
+	
+			elif re.search('^\".*\"',self.line) is not None:
+				temp = re.search('(^\".*\")',self.line)
+				self.curToken = self.idents['string_c']
+				self.curString = temp.group(1)
+				self.line = re.sub('^\".*\"',' ',self.line)
+	
+			elif re.search('^\/\/',self.line) is not None:
+				self.line = ''
+				self.curToken='NULL'
+	
+			elif re.search('^\/\*\*',self.line) is not None:
+				self.line = ''
+				self.blockcom = True
+				self.curToken='NULL'
+
 			else:
-				self.curToken = self.idents['ident']
-				self.curIdent = temp.group(1)
-			self.line = re.sub('^[A-Za-z\_]+[A-Za-z\_0-9]*',' ',self.line)
-
-		elif re.search('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1}',self.line) is not None:
-			temp = re.search('(^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1})',self.line)
-			self.curToken = self.idents['sym']
-			self.curSym = temp.group(1)
-			self.line = re.sub('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1}',' ',self.line)
-
-		elif re.search('^[0-9]+',self.line) is not None:
-			temp = re.search('(^[0-9]+)',self.line)
-			self.curToken = self.idents['intc']
-			self.curInt = temp.group(1)
-			self.line = re.sub('^[0-9]+',' ',self.line)
-
-		elif re.search('^\".*\"',self.line) is not None:
-			temp = re.search('(^\".*\")',self.line)
-			self.curToken = self.idents['string_c']
-			self.curString = temp.group(1)
-			self.line = re.sub('^\".*\"',' ',self.line)
-
-		elif re.search('^\/\/',self.line) is not None:
-			self.line = ''
-			self.advance()
-
-		elif re.search('^\/\*\*',self.line) is not None:
-			self.line = ''
-			self.blockcom = True
-			self.advance()
+				self.curToken = 'NULL'
