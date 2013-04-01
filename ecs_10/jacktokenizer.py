@@ -152,9 +152,9 @@ class JackToken:
 				self.line = re.sub('^[0-9]+',' ',self.line)
 	
 			elif re.search('^\".*\"',self.line) is not None:
-				temp = re.search('(^\".*\")',self.line)
+				temp = re.search('(^\")(.*)(\")',self.line)
 				self.curToken = self.idents['string_c']
-				self.curString = temp.group(1)
+				self.curString = temp.group(2)
 				self.line = re.sub('^\".*\"',' ',self.line)
 
 			else:
