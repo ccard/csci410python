@@ -55,7 +55,7 @@ class JackToken:
 
 	#--------------------------------------------------------------------------
 	# Returns the current token type
-	def tokeType(self):
+	def tokenType(self):
 		return self.curToken
 
 	#--------------------------------------------------------------------------
@@ -65,7 +65,7 @@ class JackToken:
 
 	#--------------------------------------------------------------------------
 	# Returns the current identifier
-	def indentifier(self):
+	def identifier(self):
 		return self.curIdent
 
 	#--------------------------------------------------------------------------
@@ -82,7 +82,7 @@ class JackToken:
 	# Advance reading of file
 	def advance(self):
 		
-		if len(self.line) == 0 or blockcom:
+		if len(self.line) == 0 or self.blockcom:
 			#checks for EOF
 			temp = self.read.tell()
 			self.line = self.read.readline()
@@ -99,18 +99,18 @@ class JackToken:
 				self.line = ''
 				self.advance()
 
-			if re.search('\*\/',self.line) is not None and blockcom:
-				blockcom = False
-				tempd = re.search('(.+\*\/)(.*)',self.line)
+			if re.search('\*\/',self.line) is not None and self.blockcom:
+				self.blockcom = False
+				tempd = re.search('(.*\*\/)(.*)',self.line)
 				self.line = tempd.group(2)
 				self.advance()
-			elif blockcom:
+			elif self.blockcom:
 				self.line = ''
 				self.advance()
 
 			if re.search('^\/\*\*',self.line) is not None:
 				self.line = ''
-				blockcom = True
+				self.blockcom = True
 				self.advance()
 				
 		self.line = self.line.strip()
