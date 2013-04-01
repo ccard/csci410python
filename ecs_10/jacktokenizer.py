@@ -130,6 +130,15 @@ class JackToken:
 					self.curIdent = temp.group(1)
 				self.line = re.sub('^[A-Za-z\_]+[A-Za-z\_0-9]*',' ',self.line)
 	
+			elif re.search('^\/\/',self.line) is not None:
+				self.line = ''
+				self.curToken='NULL'
+
+			elif re.search('^\/\*\*',self.line) is not None:
+				self.line = ''
+				self.blockcom = True
+				self.curToken='NULL'
+
 			elif re.search('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1}',self.line) is not None:
 				temp = re.search('(^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1})',self.line)
 				self.curToken = self.idents['sym']
@@ -147,15 +156,6 @@ class JackToken:
 				self.curToken = self.idents['string_c']
 				self.curString = temp.group(1)
 				self.line = re.sub('^\".*\"',' ',self.line)
-	
-			elif re.search('^\/\/',self.line) is not None:
-				self.line = ''
-				self.curToken='NULL'
-	
-			elif re.search('^\/\*\*',self.line) is not None:
-				self.line = ''
-				self.blockcom = True
-				self.curToken='NULL'
 
 			else:
 				self.curToken = 'NULL'
