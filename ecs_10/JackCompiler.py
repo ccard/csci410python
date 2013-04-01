@@ -1,6 +1,6 @@
 import sys, string, os, io,re
 from jacktokenizer import JackToken
-from compilationengine import CompilationEngine
+#from compilationengine import CompilationEngine
 #------------------------------------------------------------------------------
 #Chris Card
 #CS410
@@ -15,7 +15,10 @@ from compilationengine import CompilationEngine
 # Var Dec:
 #------------------------------------------------------------------------------
 
-infile = ''
+in_file = ''
+out_file = ''
+offset = 2
+space = ' '
 
 #------------------------------------------------------------------------------
 # Check user in:
@@ -27,29 +30,38 @@ if len(sys.argv) < 2: #Checks to see if user put in file
 
 in_file=sys.argv[1]
 
-#Checks for correct file name if not then assumes directory
-if re.search('.*\.vm',in_file) is None:
-	is_dir=True
-	#goes through the directory and finds the .vm files
-	temp = os.listdir(in_file)
-	for f in temp:
-		if re.search('.*\.vm',f) is not None:
-			temp_s = in_file+"/"+f
-			directory.append(temp_s)
-	
-	#if no files found in directory then error
-	if len(directory) == 0:
-		print("Error no '*.vm' files in path "+in_file)
-		sys.exit(0)
-else:
-	#Strips .vm of the end and adds .asm
-	temp_out=re.search('(.*)(\.vm)',in_file)
-	out_file+=temp_out.group(1)+'.asm'
+#Strips .vm of the end and adds .asm
+temp_out=re.search('(.*)(\.jack)',in_file)
+out_file+=temp_out.group(1)+'T2.xml'
 
 #------------------------------------------------------------------------------
 # Main:
 #------------------------------------------------------------------------------
+token = JackToken(in_file)
+out = open(out_file,'w')
+out.write("<tokens>\n")
+while token.hasMoreTokens():
+	token.advance()
+	if 'KEYWORD' in token.tokenType():
+		out.write((space*offset)+"<keyword>"+token.keyWord().lower()+"</keyword>\n")
+	elif 'SYMBOL' in token.tokenType():
+		tempsym = token.symbol()
+		if '<' in tempsym:
+			tempsym = '&lt;'
+		elif '>' in tempsym:
+			tempsym = '&gt;'
+		elif '&' in tempsym:
+			tempsym = '&amp;'
+		out.write((space*offset)+"<symbol>"+tempsym+"</symbol>\n")
+	elif 'IDENTIFIER' in token.tokenType():
+		out.write((space*offset)+"<identifier>"+token.identifier()+"</identifier>\n")
+	elif 'INT_CONST' in token.tokenType():
+		out.write((space*offset)+"<integerConstant>"+token.intVal()+"</integerConstant>\n")
+	elif 'STRING_CONST' in tokenType():
+		out.write((space*offset)+"<stringConstant>"+token.stringVal()+"</stringConstant>\n")
 
+out.write("</tokens>")
+out.close()
 
 
 
