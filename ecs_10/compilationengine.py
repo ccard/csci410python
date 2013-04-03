@@ -410,9 +410,6 @@ class CompilationEngine:
 				else:
 					print("ERROR: syntax violation")
 					sys.exit(0)
-			else:
-				print("ERROR: syntax violation")
-				sys.exit(0)
 
 			self.token.advance()
 
@@ -457,8 +454,6 @@ class CompilationEngine:
 		self.of.write((self.space*self.spaceCount)+self.xml['ifStatementb'])
 		self.spaceCount += 1
 
-		foundElse = False
-
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
 			if self.keyword in tokentype:
@@ -468,16 +463,32 @@ class CompilationEngine:
 
 				elif self.key_else in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde'])
-					foundElse = True
 
 				else:
 					break
 
-			elif self.sym in tokentype
+			elif self.sym in tokentype:
+				tempsym = self.token.symbol
+				if '(' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+					self.token.advance()
+					self.compileExpression()
+
+				elif '{' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+					self.token.advance()
+					self.compileStatements()
+
+			self.token.advance()
+
+		self.spaceCount += 1
+		self.of.write((self.space*self.spaceCount)+self.xml['ifStatementb'])
 
 	#------------------------------------------------------------------------------
 	# This method compiles the expression
 	def compileExpression(self):
+		self.of.write((self.space*self.spaceCount)+self.xml['ifStatementb'])
+		self.spaceCount += 1
 
 	#------------------------------------------------------------------------------
 	# This method compiles the term
