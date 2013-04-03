@@ -29,6 +29,7 @@ class JackToken:
 	curIdent=''
 	curInt=''
 	curString=''
+	linNum=0
 
 	blockcom=False
 
@@ -41,6 +42,7 @@ class JackToken:
 	#--------------------------------------------------------------------------
 	# Contstructor
 	def __init__(self,infile):
+		self.file_in = infile
 		self.read = open(infile)
 
 	#--------------------------------------------------------------------------
@@ -91,6 +93,7 @@ class JackToken:
 				self.read.close()
 				self.neOf=False
 				return
+			self.linNum += 1
 			self.line = self.line.strip()
 			
 			if len(self.line) == 0:
@@ -173,3 +176,11 @@ class JackToken:
 				return 'NILL'
 		else:
 			return 'NILL'
+
+	#--------------------------------------------------------------------------
+	# This returns the error message
+	def errorMsg(self):
+		temp = "In file: "+self.file_in+'\n'
+		temp += "On line "+repr(self.linNum)+'\n'
+		temp += "Grammera violation before > '"+self.line+"'\n"
+		return temp
