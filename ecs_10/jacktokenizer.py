@@ -182,5 +182,5 @@ class JackToken:
 	def errorMsg(self):
 		temp = "In file: "+self.file_in+'\n'
 		temp += "On line "+repr(self.linNum)+'\n'
-		temp += "Grammera violation before > '"+self.line+"'\n"
+		temp += "Grammar violation before > '"+self.line+"'\n"
 		return temp
