@@ -281,19 +281,16 @@ class CompilationEngine:
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
 				if '}' in tempsym:
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
 					break
 				else:
 					print("ERROR: syntax violation for statments of a subroutine")
 					sys.exit(0)
-			else:
-				print("ERROR: syntax violation for statments of a subroutine")
-				sys.exit(0)
 
 			self.token.advance()
 
 		self.spaceCount -= 1
 		self.of.write((self.space*self.spaceCount)+self.xml['statementse'])
+		self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole'])
 
 	#------------------------------------------------------------------------------
 	# This method compiles the do 
@@ -313,27 +310,11 @@ class CompilationEngine:
 					sys.exit(0)
 
 			elif self.ident in tokentype:
-				tempident = self.token.identifier()
-				if subCallb:
-					self.of.write((self.space*self.spaceCount)+self.xml['subroutineCallb'])
-					self.spaceCount += 1
-					subCallb = False
+				self.compileExpression()
+				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole'])
+				self.token.advance()
+				break
 
-				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere'])
-
-			elif self.sym in tokentype:
-				tempsym = self.token.symbol()
-				if '.' in tempsym:
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
-				elif '(' in tempsym:
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
-					self.token.advance()
-					self.compileExpressionList()
-				elif ';' in tempsym:
-					self.spaceCount -= 1
-					self.of.write((self.space*self.spaceCount)+self.xml['subroutineCalle'])
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
-					break
 			self.token.advance()
 
 		self.spaceCount -= 1
@@ -365,11 +346,14 @@ class CompilationEngine:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
 					self.token.advance()
 					self.compileExpression()
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole'])
 				elif '=' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
 					self.token.advance()
 					self.compileExpression()
-				elif ';' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole'])
+				
+				if ';' in self.token.symbol():
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
 					break
 				else:
@@ -402,6 +386,7 @@ class CompilationEngine:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
 					self.token.advance()
 					self.compileExpression()
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole'])
 				elif '{' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
 					self.token.advance()
@@ -482,18 +467,154 @@ class CompilationEngine:
 			self.token.advance()
 
 		self.spaceCount += 1
-		self.of.write((self.space*self.spaceCount)+self.xml['ifStatementb'])
+		self.of.write((self.space*self.spaceCount)+self.xml['ifStatemente'])
 
 	#------------------------------------------------------------------------------
 	# This method compiles the expression
 	def compileExpression(self):
-		self.of.write((self.space*self.spaceCount)+self.xml['ifStatementb'])
+		self.of.write((self.space*self.spaceCount)+self.xml['expressionb'])
 		self.spaceCount += 1
+
+		while self.token.hasMoreTokens():
+			tokentype = self.token.tokenType()
+			if self.sym in tokentype:
+				tempsym = self.token.symbol()
+				if tempsym in '+-*/&|<>=':
+					self.of.write((self.space*self.spaceCount)+self.xml['opb']+tempsym+self.xml['ope'])
+				elif tempsym in ';)],':
+					break
+			else:
+				self.compileTerm()
+
+			self.token.advance()
+
+		self.spaceCount -= 1
+		self.of.write((self.space*self.spaceCount)+self.xml['expressione'])
 
 	#------------------------------------------------------------------------------
 	# This method compiles the term
 	def compileTerm(self):
+		self.of.write((self.space*self.spaceCount)+self.xml['termb'])
+		self.spaceCount += 1
+
+		while self.token.hasMoreTokens():
+			tokentype = self.token.tokenType()
+			if self.keyword in tokentype:
+				tempkey = self.token.keyWord()
+				if self.key_true in tempkey or self.key_false in tempkey or self.key_null in tempkey or self.key_this in tempkey:
+					self.of.write((self.space*self.spaceCount)+self.xml['KeywrodConstantb']+tempkey.lower()+self.xml['KeywrodConstante'])
+				
+				else:
+					print("ERROR: syntax violation")
+					sys.exit(0)
+
+			elif self.ident in tokentype:
+				tempident = self.token.identifier()
+				peaks = self.token.peak()
+				if '.' in peaks:
+					self.of.write((self.space*self.spaceCount)+self.xml['subroutineCallb'])
+					self.spaceCount += 1
+
+					#replace this with code to do a look up
+					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere'])
+					self.token.advance()
+
+					tempsym = self.token.symbol()
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+					self.token.advance()
+
+					tempident = self.token.identifier()
+					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere'])
+					self.token.advance()
+
+					tempsym = self.token.symbol()
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+					self.token.advance()
+
+					self.compileExpressionList()
+					self.spaceCount -= 1
+					self.of.write((self.space*self.spaceCount)+self.xml['subroutineCalle'])
+
+				elif '(' in peaks:
+					self.of.write((self.space*self.spaceCount)+self.xml['subroutineCallb'])
+					self.spaceCount += 1
+
+					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere'])
+					self.token.advance()
+					
+					tempsym = self.token.symbol()
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+					self.token.advance()
+
+					self.compileExpressionList()
+
+					self.spaceCount -= 1
+					self.of.write((self.space*self.spaceCount)+self.xml['subroutineCalle'])
+
+				elif '[' in peaks:
+					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere'])
+					self.token.advance()
+					
+					tempsym = self.token.symbol()
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+					self.token.advance()
+
+					self.compileExpression()
+
+					tempsym = self.token.symbol()
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+
+			elif self.intc in tokentype:
+				self.of.write((self.space*self.spaceCount)+self.xml['integerConstantb']+self.token.intVal()+self.xml['integerConstante'])
+
+			elif self.string_c in tokentype:
+				self.of.write((self.space*self.spaceCount)+self.xml['StringConstantb']+self.token.stringVal()+self.xml['StringConstante'])
+
+			elif self.sym in tokentype:
+				tempsym = self.token.symbol()
+				if '(' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+					self.token.advance()
+					self.compileExpression()
+
+					tempsym = self.token.symbol()
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+
+				elif tempsym in '-~':
+					self.of.write((self.space*self.spaceCount)+self.xml['unaryOPb']+tempsym+self.xml['unaryOPe'])
+					self.token.advance()
+					self.compileTerm()
+
+			if self.token.peak() in ']);,':
+				break
+
+			self.token.advance()
+
+		self.spaceCount -= 1
+		self.of.write((self.space*self.spaceCount)+self.xml['terme'])
 
 	#------------------------------------------------------------------------------
 	# This method compiles the expressionList
 	def compileExpressionList(self):
+		self.of.write((self.space*self.spaceCount)+self.xml['expressionListb'])
+		self.spaceCount += 1
+
+		while self.token.hasMoreTokens():
+			tokentype = self.token.tokenType()
+
+			if self.sym in tokentype:
+				tempsym = self.token.symbol()
+				if ',' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole'])
+					self.token.advance()
+					self.compileExpression()
+				elif ')' in tempsym:
+					break
+				else:
+					print("ERROR: syntax violation")
+					sys.exit(0)
+			else:
+
+		self.spaceCount -= 1
+		self.of.write((self.space*self.spaceCount)+self.xml['expressionListe'])
+		self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole'])
