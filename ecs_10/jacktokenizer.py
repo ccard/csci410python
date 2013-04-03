@@ -83,7 +83,7 @@ class JackToken:
 	def advance(self):
 		
 		if len(self.line) == 0 or self.blockcom:
-			self.curToken = "NULL"
+			self.curToken = "NILL"
 			#checks for EOF
 			temp = self.read.tell()
 			self.line = self.read.readline()
@@ -94,29 +94,29 @@ class JackToken:
 			self.line = self.line.strip()
 			
 			if len(self.line) == 0:
-				self.curToken='NULL'
+				self.curToken='NILL'
 
 			if re.search('^\/\/',self.line) is not None:
 				self.line = ''
-				self.curToken='NULL'
+				self.curToken='NILL'
 
 			if re.search('\*\/',self.line) is not None and self.blockcom:
 				self.blockcom = False
 				tempd = re.search('(.*\*\/)(.*)',self.line)
 				self.line = tempd.group(2)
-				self.curToken='NULL'
+				self.curToken='NILL'
 
 			elif self.blockcom:
 				self.line = ''
-				self.curToken='NULL'
+				self.curToken='NILL'
 
 			if re.search('^\/\*\*.*\*\/',self.line) is not None:
 				self.line = ''
-				self.curToken = 'NULL'
+				self.curToken = 'NILL'
 			elif re.search('^\/\*\*',self.line) is not None:
 				self.line = ''
 				self.blockcom = True
-				self.curToken='NULL'
+				self.curToken='NILL'
 		else:
 			self.line = self.line.strip()
 
@@ -132,12 +132,12 @@ class JackToken:
 	
 			elif re.search('^\/\/',self.line) is not None:
 				self.line = ''
-				self.curToken='NULL'
+				self.curToken='NILL'
 
 			elif re.search('^\/\*\*',self.line) is not None:
 				self.line = ''
 				self.blockcom = True
-				self.curToken='NULL'
+				self.curToken='NILL'
 
 			elif re.search('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1}',self.line) is not None:
 				temp = re.search('(^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1})',self.line)
@@ -154,8 +154,22 @@ class JackToken:
 			elif re.search('^\".*\"',self.line) is not None:
 				temp = re.search('(^\")(.*)(\")',self.line)
 				self.curToken = self.idents['string_c']
-				self.curString = temp.group(2)
+				self.curString = temp.group(2
+
+					)
 				self.line = re.sub('^\".*\"',' ',self.line)
 
 			else:
-				self.curToken = 'NULL'
+				self.curToken = 'NILL'
+
+	#--------------------------------------------------------------------------
+	# peaks ahead to the next token
+	def peak(self):
+		if len(self.line) != 0:
+			if re.search('^\.\(\[\]\)\;',self.line) is not None:
+				temp = re.search('(^\.\(\[\]\)\;)(.*)',self.line)
+				return temp.group(1)
+			else:
+				return 'NILL'
+		else:
+			return 'NILL'
