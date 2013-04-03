@@ -572,6 +572,8 @@ class CompilationEngine:
 
 					tempsym = self.token.symbol()
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+				else:
+					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
 
 			elif self.intc in tokentype:
 				self.of.write((self.space*self.spaceCount)+self.xml['integerConstantb']+self.token.intVal()+self.xml['integerConstante']+'\n')
@@ -594,7 +596,17 @@ class CompilationEngine:
 					self.token.advance()
 					self.compileTerm()
 
-			if self.token.peak() in ']);,':
+			if self.token.peak() in ']':
+				print("here")
+				break
+			elif self.token.peak() in ')':
+				print("here")
+				break
+			elif self.token.peak() in ';':
+				print("here")
+				break
+			elif self.token.peak() in ',':
+				print("here")
 				break
 
 			self.token.advance()
