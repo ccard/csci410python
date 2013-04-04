@@ -80,6 +80,7 @@ class CompilationEngine:
 				
 				elif self.key_static in tempkey or self.key_field in tempkey:
 					self.compileClassVarDec()
+					continue
 
 				elif self.key_constructor in tempkey or self.key_method in tempkey or self.key_function in tempkey:
 					self.compileSubroutine()
@@ -112,18 +113,16 @@ class CompilationEngine:
 			tokentype = self.token.tokenType()
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
-				if self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey and not ifSemiCol:
-					self.of.write((self.space*self.spaceCount)+self.xml['typeb']+tempkey.lower()+self.xml['typee']+'\n')
-
-				elif self.key_static in tempkey or self.key_field in tempkey and ifSemiCol:
+				if self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
-				else:
-					break
+				elif self.key_static in tempkey or self.key_field in tempkey:
+					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
-				ifSemiCol = False
+				elif self.key_function in tempkey or self.key_method in tempkey or self.key_constructor in tempkey:
+					break
 					
-			elif self.identifier in tokentype:
+			elif self.ident in tokentype:
 				tempident = self.token.identifier()
 				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
 
@@ -133,12 +132,15 @@ class CompilationEngine:
 					print("ERROR: syntax violation a ',' came after ';'\n")
 					sys.exit(0)
 				if re.search('[\(\)\{\}\[\]\.\+\-\*\/\&\<\>\=\~]{1}',tempsym) is not None:
-					print("ERROR: syntax violation a invalid symbol occured in var decliration section\n")
+					print(self.token.errorMsg())
 					sys.exit(0)
 
 				if ';' in tempsym:
-					ifSemiCol = True
-				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempident+self.xml['symbole']+'\n')
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+					self.token.advance()
+					break
+
+				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 
 			self.token.advance()
 
@@ -159,7 +161,7 @@ class CompilationEngine:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 				elif self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey or self.key_void in tempkey:
-					self.of.write((self.space*self.spaceCount)+self.xml['typeb']+tempkey.lower()+self.xml['typee']+'\n')
+					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
@@ -199,7 +201,7 @@ class CompilationEngine:
 
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
-				self.of.write((self.space*self.spaceCount)+self.xml['typeb']+tempkey.lower()+self.xml['typee']+'\n')
+				self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 			elif self.ident in tokentype:
 				tempident = self.token.identifier()
@@ -208,8 +210,6 @@ class CompilationEngine:
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
 				if ')' in tempsym:
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
-					self.token.advance()
 					break
 
 				elif ',' in tempsym:
@@ -223,13 +223,20 @@ class CompilationEngine:
 
 		self.spaceCount -= 1
 		self.of.write((self.space*self.spaceCount)+self.xml['parameterListe']+'\n')
+		self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+		self.token.advance()
 		self.token.advance()
 
 	#------------------------------------------------------------------------------
 	# This method compiles the var decliration
 	def compileVarDec(self):
+		if self.key_var not in self.token.tokenType():
+			return
+
 		self.of.write((self.space*self.spaceCount)+self.xml['varDecb']+'\n')
 		self.spaceCount += 1
+
+		has_var_dec = False
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
@@ -240,7 +247,7 @@ class CompilationEngine:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 				elif self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey:
-					self.of.write((self.space*self.spaceCount)+self.xml['typeb']+tempkey.lower()+self.xml['typee']+'\n')
+					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 				else:
 					break
@@ -274,6 +281,7 @@ class CompilationEngine:
 
 				elif self.key_if in tempkey:
 					self.compileIf()
+					continue
 
 				elif self.key_while in tempkey:
 					self.compileWhile()
@@ -285,14 +293,14 @@ class CompilationEngine:
 					self.compileReturn()
 
 				else:
-					print("ERROR: syntax violation for statments of a subroutine")
+					print(self.token.errorMsg())
 					sys.exit(0)
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
 				if '}' in tempsym:
 					break
 				else:
-					print("ERROR: syntax violation for statments of a subroutine")
+					print(self.token.errorMsg())
 					sys.exit(0)
 
 			self.token.advance()
@@ -311,7 +319,7 @@ class CompilationEngine:
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
 			if self.keyword in tokentype:
-				tempkey = self.keyWord()
+				tempkey = self.token.keyWord()
 				if self.key_do in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 				else:
@@ -320,7 +328,7 @@ class CompilationEngine:
 
 			elif self.ident in tokentype:
 				self.compileExpression()
-				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
+				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+self.token.identifier()+self.xml['identifiere']+'\n')
 				self.token.advance()
 				break
 
@@ -360,13 +368,14 @@ class CompilationEngine:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 					self.compileExpression()
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
+					tempsym = self.token.symbol()
 				
 				if ';' in self.token.symbol():
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					break
 				else:
 					print(self.token.errorMsg())
+					sys.exit(0)
 
 			self.token.advance()
 
@@ -425,9 +434,15 @@ class CompilationEngine:
 
 				else:
 					self.compileExpression()
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
+					self.token.advance()
+					break
 
 			elif self.ident in tokentype or self.string_c in tokentype or self.intc in tokentype:
 				self.compileExpression()
+				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
+				self.token.advance()
+				break
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
@@ -436,10 +451,11 @@ class CompilationEngine:
 					break
 				else:
 					print(self.token.errorMsg())
+					sys.exit(0)
 
 			self.token.advance()
 
-		self.spaceCount += 1
+		self.spaceCount -= 1
 		self.of.write((self.space*self.spaceCount)+self.xml['ReturnStatemente']+'\n')
 		
 	#------------------------------------------------------------------------------
@@ -462,7 +478,7 @@ class CompilationEngine:
 					break
 
 			elif self.sym in tokentype:
-				tempsym = self.token.symbol
+				tempsym = self.token.symbol()
 				if '(' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
@@ -475,7 +491,7 @@ class CompilationEngine:
 
 			self.token.advance()
 
-		self.spaceCount += 1
+		self.spaceCount -= 1
 		self.of.write((self.space*self.spaceCount)+self.xml['ifStatemente']+'\n')
 
 	#------------------------------------------------------------------------------
@@ -596,17 +612,7 @@ class CompilationEngine:
 					self.token.advance()
 					self.compileTerm()
 
-			if self.token.peak() in ']':
-				print("here")
-				break
-			elif self.token.peak() in ')':
-				print("here")
-				break
-			elif self.token.peak() in ';':
-				print("here")
-				break
-			elif self.token.peak() in ',':
-				print("here")
+			if self.token.peak() in ']);,':
 				break
 
 			self.token.advance()
@@ -632,11 +638,9 @@ class CompilationEngine:
 				elif ')' in tempsym:
 					break
 				else:
-					print(self.token.errorMsg())
-					sys.exit(0)
+					self.compileExpression()
 			else:
-				print(self.token.errorMsg())
-				sys.exit(0)
+				self.compileExpression()
 
 		self.spaceCount -= 1
 		self.of.write((self.space*self.spaceCount)+self.xml['expressionListe']+'\n')
