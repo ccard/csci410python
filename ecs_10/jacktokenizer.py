@@ -131,7 +131,7 @@ class JackToken:
 				else:
 					self.curToken = self.idents['ident']
 					self.curIdent = temp.group(1)
-				self.line = re.sub('^[A-Za-z\_]+[A-Za-z\_0-9]*',' ',self.line)
+				self.line = re.sub('^[A-Za-z\_]+[A-Za-z\_0-9]*','',self.line)
 	
 			elif re.search('^\/\/',self.line) is not None:
 				self.line = ''
@@ -146,21 +146,19 @@ class JackToken:
 				temp = re.search('(^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1})',self.line)
 				self.curToken = self.idents['sym']
 				self.curSym = temp.group(1)
-				self.line = re.sub('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1}',' ',self.line)
+				self.line = re.sub('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1}','',self.line)
 	
 			elif re.search('^[0-9]+',self.line) is not None:
 				temp = re.search('(^[0-9]+)',self.line)
 				self.curToken = self.idents['intc']
 				self.curInt = temp.group(1)
-				self.line = re.sub('^[0-9]+',' ',self.line)
+				self.line = re.sub('^[0-9]+','',self.line)
 	
 			elif re.search('^\".*\"',self.line) is not None:
 				temp = re.search('(^\")(.*)(\")',self.line)
 				self.curToken = self.idents['string_c']
-				self.curString = temp.group(2
-
-					)
-				self.line = re.sub('^\".*\"',' ',self.line)
+				self.curString = temp.group(2)
+				self.line = re.sub('^\".*\"','',self.line)
 
 			else:
 				self.curToken = 'NILL'
@@ -168,9 +166,10 @@ class JackToken:
 	#--------------------------------------------------------------------------
 	# peaks ahead to the next token
 	def peak(self):
+		self.line.strip()
 		if len(self.line) != 0:
-			if re.search('^\.\(\[\]\)\;',self.line) is not None:
-				temp = re.search('(^\.\(\[\]\)\;)(.*)',self.line)
+			if re.search('^[\.\(\[\]\)\;]{1}',self.line) is not None:
+				temp = re.search('(^[\.\(\[\]\)\;]{1})(.*)',self.line)
 				return temp.group(1)
 			else:
 				return 'NILL'
