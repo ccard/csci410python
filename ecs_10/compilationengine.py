@@ -328,8 +328,8 @@ class CompilationEngine:
 
 			elif self.ident in tokentype:
 				self.compileExpression()
-				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+self.token.identifier()+self.xml['identifiere']+'\n')
-				self.token.advance()
+				#self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+self.token.identifier()+self.xml['identifiere']+'\n')
+				#self.token.advance()
 				break
 
 			self.token.advance()
@@ -506,6 +506,12 @@ class CompilationEngine:
 				tempsym = self.token.symbol()
 				if tempsym in '+-*/&|<>=':
 					self.of.write((self.space*self.spaceCount)+self.xml['opb']+tempsym+self.xml['ope']+'\n')
+				elif '(' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+					self.token.advance()
+					self.compileExpression()
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+
 				elif tempsym in ';)],':
 					break
 			else:
@@ -611,6 +617,13 @@ class CompilationEngine:
 					self.of.write((self.space*self.spaceCount)+self.xml['unaryOPb']+tempsym+self.xml['unaryOPe']+'\n')
 					self.token.advance()
 					self.compileTerm()
+
+				elif tempsym in '+-*/&|<>=':
+					self.spaceCount -= 1
+					self.of.write((self.space*self.spaceCount)+self.xml['terme']+'\n')
+					self.of.write((self.space*self.spaceCount)+self.xml['opb']+tempsym+self.xml['ope']+'\n')
+					return
+					
 
 			if self.token.peak() in ']);,':
 				break
