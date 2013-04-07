@@ -543,9 +543,6 @@ class CompilationEngine:
 				tempident = self.token.identifier()
 				peaks = self.token.peak()
 				if '.' in peaks:
-					self.of.write((self.space*self.spaceCount)+self.xml['subroutineCallb']+'\n')
-					self.spaceCount += 1
-
 					#replace this with code to do a look up
 					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
 					self.token.advance()
@@ -563,12 +560,8 @@ class CompilationEngine:
 					self.token.advance()
 
 					self.compileExpressionList()
-					self.spaceCount -= 1
-					self.of.write((self.space*self.spaceCount)+self.xml['subroutineCalle']+'\n')
 
 				elif '(' in peaks:
-					self.of.write((self.space*self.spaceCount)+self.xml['subroutineCallb']+'\n')
-					self.spaceCount += 1
 
 					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
 					self.token.advance()
@@ -578,9 +571,6 @@ class CompilationEngine:
 					self.token.advance()
 
 					self.compileExpressionList()
-
-					self.spaceCount -= 1
-					self.of.write((self.space*self.spaceCount)+self.xml['subroutineCalle']+'\n')
 
 				elif '[' in peaks:
 					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
