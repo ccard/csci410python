@@ -558,36 +558,42 @@ class CompilationEngine:
 		self.of.write((self.space*self.spaceCount)+self.xml['ifStatementb']+'\n')
 		self.spaceCount += 1
 
-		seen_once = True #this means that keyword if has been seen only once
+		#this means that keyword if has been seen only once so if it seen again
+		#that means it is a seperate if statment 
+		seen_once = True
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
-			
+
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
 
 				if self.key_if in tempkey and seen_once:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
-					seen_once = False
 
 				elif self.key_else in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
+				#if any other keyword is seen then it is the end of an if statement
 				else:
 					break
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
+
+				#The condition of an if statment
 				if '(' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 					self.compileExpression(False)
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
 
+				#body of an if|else statment
 				elif '{' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 					self.compileStatements()
+					seen_once = False
 
 			self.token.advance()
 
@@ -597,29 +603,40 @@ class CompilationEngine:
 	#------------------------------------------------------------------------------
 	# This method compiles the expression
 	def compileExpression(self,subCall):
+		#if it a subrountine call don't want to print out the exprssion attribute
 		if not subCall:
 			self.of.write((self.space*self.spaceCount)+self.xml['expressionb']+'\n')
+
 		self.spaceCount += 1
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
+
 			if self.sym in tokentype:
 				tempsym = self.token.symbol()
+
+				#if it is an operator then print out the appropriate xml attribute statement
 				if tempsym in '+-*/&|<>=':
 					if '<' in tempsym:
 						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&lt;"+self.xml['symbole']+'\n')
+
 					elif '>' in tempsym:
 						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&gt;"+self.xml['symbole']+'\n')
+
 					elif '&' in tempsym:
 						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&amp;"+self.xml['symbole']+'\n')
+
 					else:
 						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 
+				#this means that we have term to compile
 				elif tempsym in '(~':
 					self.compileTerm(subCall)
 
+				#signifies the end of an expression
 				elif tempsym in ';)],':
 					break
+
 			else:
 				self.compileTerm(subCall)
 
@@ -634,22 +651,29 @@ class CompilationEngine:
 	def compileTerm(self,subCall):
 		if not subCall:
 			self.of.write((self.space*self.spaceCount)+self.xml['termb']+'\n')
+
 		self.spaceCount += 1
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
+
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
+
 				if self.key_true in tempkey or self.key_false in tempkey or self.key_null in tempkey or self.key_this in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 				
+				#any other keyword than the ones above results in an error
 				else:
 					print(self.token.errorMsg())
 					sys.exit(0)
 
 			elif self.ident in tokentype:
 				tempident = self.token.identifier()
+				#peaks at the next token to determine the type of call
 				peaks = self.token.peak()
+
+				#means that it as a call to a var or class method
 				if '.' in peaks:
 					#replace this with code to do a look up
 					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
@@ -667,8 +691,10 @@ class CompilationEngine:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 
+					#then compiles the expression list
 					self.compileExpressionList()
 
+				#this means that it is a subroutine call to one of its own methods
 				elif '(' in peaks:
 
 					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
@@ -680,6 +706,7 @@ class CompilationEngine:
 
 					self.compileExpressionList()
 
+				#this means that it is accessing an array element
 				elif '[' in peaks:
 					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
 					self.token.advance()
@@ -692,6 +719,8 @@ class CompilationEngine:
 
 					tempsym = self.token.symbol()
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+
+				#other wise it is just an identifier
 				else:
 					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
 
@@ -703,6 +732,8 @@ class CompilationEngine:
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
+
+				#this means that it is and expression surrounded by ()
 				if '(' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
@@ -711,26 +742,31 @@ class CompilationEngine:
 					tempsym = self.token.symbol()
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 
+				#not unary operator 
 				elif '~' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 					self.compileTerm(subCall)
 
+				#operator
 				elif tempsym in '+-*/&|<>=':
 					self.spaceCount -= 1
 					self.of.write((self.space*self.spaceCount)+self.xml['terme']+'\n')
 					if '<' in tempsym:
 						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&lt;"+self.xml['symbole']+'\n')
+
 					elif '>' in tempsym:
 						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&gt;"+self.xml['symbole']+'\n')
+
 					elif '&' in tempsym:
 						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&amp;"+self.xml['symbole']+'\n')
+
 					else:
 						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 
 					return
 					
-
+			#if the next token is ]);, means the end of a term
 			if self.token.peak() in ']);,':
 				break
 
@@ -751,12 +787,17 @@ class CompilationEngine:
 
 			if self.sym in tokentype:
 				tempsym = self.token.symbol()
+
+				#indicates teh start of another expression
 				if ',' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 					self.compileExpression(False)
+
+				#indicates that end of expression list
 				elif ')' in tempsym:
 					break
+				#other wise compile expression
 				else:
 					self.compileExpression(False)
 			else:
@@ -765,3 +806,5 @@ class CompilationEngine:
 		self.spaceCount -= 1
 		self.of.write((self.space*self.spaceCount)+self.xml['expressionListe']+'\n')
 		self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
+
+#-------------------End Class--------------------------------------------------
