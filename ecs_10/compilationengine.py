@@ -44,18 +44,15 @@ class CompilationEngine:
 	space = ' '
 	spaceCount = 0
 	
-	xml={'classb':'<class>','classe':'</class>','classVarDecb':'<classVarDec>','classVarDece':'</classVarDec>','typeb':'<type>','typee':'</type>'
+	xml={'classb':'<class>','classe':'</class>','classVarDecb':'<classVarDec>','classVarDece':'</classVarDec>'
 		,'subroutineDecb':'<subroutineDec>','subroutineDece':'</subroutineDec>','parameterListb':'<parameterList>','parameterListe':'</parameterList>'
-		,'subroutineBodyb':'<subroutineBody>','subroutineBodye':'</subroutineBody>','varDecb':'<varDec>','varDece':'</varDec>','classNameb':'<className>'
-		,'classNamee':'</className>','subrountineNameb':'<subrountineName>','subrountineNamee':'</subrountineName>','varNameb':'<varName>','varNamee':'</varName>'
+		,'subroutineBodyb':'<subroutineBody>','subroutineBodye':'</subroutineBody>','varDecb':'<varDec>','varDece':'</varDec>'
 		,'statementsb':'<statements>','statementse':'</statements>','letStatementb':'<letStatement>','letStatemente':'</letStatement>'
 		,'ifStatementb':'<ifStatement>','ifStatemente':'</ifStatement>','whileStatementb':'<whileStatement>','whileStatemente':'</whileStatement>'
-		,'doStatementb':'<doStatement>','doStatemente':'</doStatement>','ReturnStatementb':'<ReturnStatement>','ReturnStatemente':'</ReturnStatement>'
-		,'expressionb':'<expression>','expressione':'</expression>','termb':'<term>','terme':'</term>','subroutineCallb':'<subroutineCall>'
-		,'subroutineCalle':'</subroutineCall>','expressionListb':'<expressionList>','expressionListe':'</expressionList>','opb':'<op>','ope':'</op>'
-		,'unaryOPb':'<unaryOP>','unaryOPe':'</unaryOP>','KeywrodConstantb':'<KeywrodConstant>','KeywrodConstante':'</KeywrodConstant>'
-		,'integerConstantb':'<integerConstant>','integerConstante':'</integerConstant>','StringConstantb':'<StringConstant>','StringConstante':'</StringConstant>'
-		,'identifierb':'<identifier>','identifiere':'</identifier>','keywordb':'<keyword>','keyworde':'</keyword>',
+		,'doStatementb':'<doStatement>','doStatemente':'</doStatement>','ReturnStatementb':'<returnStatement>','ReturnStatemente':'</returnStatement>'
+		,'expressionb':'<expression>','expressione':'</expression>','termb':'<term>','terme':'</term>','expressionListb':'<expressionList>'
+		,'expressionListe':'</expressionList>','integerConstantb':'<integerConstant>','integerConstante':'</integerConstant>','StringConstantb':'<stringConstant>'
+		,'StringConstante':'</stringConstant>','identifierb':'<identifier>','identifiere':'</identifier>','keywordb':'<keyword>','keyworde':'</keyword>',
 		'symbolb':'<symbol>', 'symbole':'</symbol>'}
 	
 	
@@ -163,6 +160,12 @@ class CompilationEngine:
 				elif self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey or self.key_void in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
+				elif self.key_var in tempkey:
+					self.compileVarDec()
+
+				else:
+					break
+
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
 				if '(' in tempsym:
@@ -171,8 +174,6 @@ class CompilationEngine:
 					self.compileParameterList()
 					self.of.write((self.space*self.spaceCount)+self.xml['subroutineBodyb']+'\n')
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
-					self.token.advance()
-					break
 				else:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 
@@ -180,8 +181,6 @@ class CompilationEngine:
 				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+self.token.identifier()+self.xml['identifiere']+'\n')
 
 			self.token.advance()
-
-		self.compileVarDec()
 
 		self.compileStatements()
 
@@ -230,9 +229,6 @@ class CompilationEngine:
 	#------------------------------------------------------------------------------
 	# This method compiles the var decliration
 	def compileVarDec(self):
-		if self.key_var not in self.token.tokenType():
-			return
-
 		self.of.write((self.space*self.spaceCount)+self.xml['varDecb']+'\n')
 		self.spaceCount += 1
 
@@ -258,7 +254,11 @@ class CompilationEngine:
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
-				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+				if ',' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+				elif ';' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+					break
 
 			self.token.advance()
 
@@ -327,9 +327,9 @@ class CompilationEngine:
 					sys.exit(0)
 
 			elif self.ident in tokentype:
-				self.compileExpression()
-				#self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+self.token.identifier()+self.xml['identifiere']+'\n')
-				#self.token.advance()
+				self.compileExpression(True)
+				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
+				self.token.advance()
 				break
 
 			self.token.advance()
@@ -362,12 +362,15 @@ class CompilationEngine:
 				if '[' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
-					self.compileExpression()
+					self.compileExpression(False)
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
+					self.token.advance()
+					continue
+
 				elif '=' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
-					self.compileExpression()
+					self.compileExpression(False)
 					tempsym = self.token.symbol()
 				
 				if ';' in self.token.symbol():
@@ -385,7 +388,7 @@ class CompilationEngine:
 	#------------------------------------------------------------------------------
 	# This method compiles the whileStatement
 	def compileWhile(self):
-		self.of.write((self.space*self.spaceCount)+self.xml['whileStatementb'])
+		self.of.write((self.space*self.spaceCount)+self.xml['whileStatementb']+'\n')
 		self.spaceCount += 1
 
 		while self.token.hasMoreTokens():
@@ -403,7 +406,7 @@ class CompilationEngine:
 				if '(' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
-					self.compileExpression()
+					self.compileExpression(False)
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
 				elif '{' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
@@ -433,13 +436,13 @@ class CompilationEngine:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 				else:
-					self.compileExpression()
+					self.compileExpression(False)
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
 					self.token.advance()
 					break
 
 			elif self.ident in tokentype or self.string_c in tokentype or self.intc in tokentype:
-				self.compileExpression()
+				self.compileExpression(False)
 				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
 				self.token.advance()
 				break
@@ -464,12 +467,15 @@ class CompilationEngine:
 		self.of.write((self.space*self.spaceCount)+self.xml['ifStatementb']+'\n')
 		self.spaceCount += 1
 
+		seen_once = True
+
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
-				if self.key_if in tempkey:
+				if self.key_if in tempkey and seen_once:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
+					seen_once = False
 
 				elif self.key_else in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
@@ -482,7 +488,8 @@ class CompilationEngine:
 				if '(' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
-					self.compileExpression()
+					self.compileExpression(False)
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
 
 				elif '{' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
@@ -496,8 +503,9 @@ class CompilationEngine:
 
 	#------------------------------------------------------------------------------
 	# This method compiles the expression
-	def compileExpression(self):
-		self.of.write((self.space*self.spaceCount)+self.xml['expressionb']+'\n')
+	def compileExpression(self,subCall):
+		if not subCall:
+			self.of.write((self.space*self.spaceCount)+self.xml['expressionb']+'\n')
 		self.spaceCount += 1
 
 		while self.token.hasMoreTokens():
@@ -505,27 +513,34 @@ class CompilationEngine:
 			if self.sym in tokentype:
 				tempsym = self.token.symbol()
 				if tempsym in '+-*/&|<>=':
-					self.of.write((self.space*self.spaceCount)+self.xml['opb']+tempsym+self.xml['ope']+'\n')
-				elif '(' in tempsym:
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
-					self.token.advance()
-					self.compileExpression()
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+					if '<' in tempsym:
+						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&lt;"+self.xml['symbole']+'\n')
+					elif '>' in tempsym:
+						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&gt;"+self.xml['symbole']+'\n')
+					elif '&' in tempsym:
+						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&amp;"+self.xml['symbole']+'\n')
+					else:
+						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+
+				elif tempsym in '(~':
+					self.compileTerm(subCall)
 
 				elif tempsym in ';)],':
 					break
 			else:
-				self.compileTerm()
+				self.compileTerm(subCall)
 
 			self.token.advance()
 
 		self.spaceCount -= 1
-		self.of.write((self.space*self.spaceCount)+self.xml['expressione']+'\n')
+		if not subCall:
+			self.of.write((self.space*self.spaceCount)+self.xml['expressione']+'\n')
 
 	#------------------------------------------------------------------------------
 	# This method compiles the term
-	def compileTerm(self):
-		self.of.write((self.space*self.spaceCount)+self.xml['termb']+'\n')
+	def compileTerm(self,subCall):
+		if not subCall:
+			self.of.write((self.space*self.spaceCount)+self.xml['termb']+'\n')
 		self.spaceCount += 1
 
 		while self.token.hasMoreTokens():
@@ -533,7 +548,7 @@ class CompilationEngine:
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
 				if self.key_true in tempkey or self.key_false in tempkey or self.key_null in tempkey or self.key_this in tempkey:
-					self.of.write((self.space*self.spaceCount)+self.xml['KeywrodConstantb']+tempkey.lower()+self.xml['KeywrodConstante']+'\n')
+					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 				
 				else:
 					print(self.token.errorMsg())
@@ -580,7 +595,7 @@ class CompilationEngine:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 
-					self.compileExpression()
+					self.compileExpression(subCall)
 
 					tempsym = self.token.symbol()
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
@@ -598,20 +613,28 @@ class CompilationEngine:
 				if '(' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
-					self.compileExpression()
+					self.compileExpression(subCall)
 
 					tempsym = self.token.symbol()
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 
-				elif tempsym in '-~':
-					self.of.write((self.space*self.spaceCount)+self.xml['unaryOPb']+tempsym+self.xml['unaryOPe']+'\n')
+				elif '~' in tempsym:
+					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
-					self.compileTerm()
+					self.compileTerm(subCall)
 
 				elif tempsym in '+-*/&|<>=':
 					self.spaceCount -= 1
 					self.of.write((self.space*self.spaceCount)+self.xml['terme']+'\n')
-					self.of.write((self.space*self.spaceCount)+self.xml['opb']+tempsym+self.xml['ope']+'\n')
+					if '<' in tempsym:
+						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&lt;"+self.xml['symbole']+'\n')
+					elif '>' in tempsym:
+						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&gt;"+self.xml['symbole']+'\n')
+					elif '&' in tempsym:
+						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&amp;"+self.xml['symbole']+'\n')
+					else:
+						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+
 					return
 					
 
@@ -621,7 +644,8 @@ class CompilationEngine:
 			self.token.advance()
 
 		self.spaceCount -= 1
-		self.of.write((self.space*self.spaceCount)+self.xml['terme']+'\n')
+		if not subCall:
+			self.of.write((self.space*self.spaceCount)+self.xml['terme']+'\n')
 
 	#------------------------------------------------------------------------------
 	# This method compiles the expressionList
@@ -637,13 +661,13 @@ class CompilationEngine:
 				if ',' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
-					self.compileExpression()
+					self.compileExpression(False)
 				elif ')' in tempsym:
 					break
 				else:
-					self.compileExpression()
+					self.compileExpression(False)
 			else:
-				self.compileExpression()
+				self.compileExpression(False)
 
 		self.spaceCount -= 1
 		self.of.write((self.space*self.spaceCount)+self.xml['expressionListe']+'\n')
