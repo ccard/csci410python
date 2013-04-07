@@ -168,8 +168,8 @@ class JackToken:
 	def peak(self):
 		self.line.strip()
 		if len(self.line) != 0:
-			if re.search('^[\.\(\[\]\)\;\+\-\*\/\&\|\<\>\=\,]{1}',self.line) is not None:
-				temp = re.search('(\s*)(^[\.\(\[\]\)\;\+\-\*\/\&\|\<\>\=\,]{1})(.*)',self.line)
+			if re.search('^[\.\(\[\]\)\;\+\-\*\/\&\|\<\>\=\,\~]{1}',self.line) is not None:
+				temp = re.search('(\s*)(^[\.\(\[\]\)\;\+\-\*\/\&\|\<\>\=\,\~]{1})(.*)',self.line)
 				return temp.group(2)
 			else:
 				return 'NILL'
