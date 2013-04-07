@@ -14,6 +14,7 @@ class CompilationEngine:
 	# Var Declar:
 	#------------------------------------------------------------------------------
 	
+	#stores all the different key words
 	key_class='CLASS'
 	key_method='METHOD'
 	key_function='FUNCTION'
@@ -36,14 +37,18 @@ class CompilationEngine:
 	key_null='NULL'
 	key_this='THIS'
 	
+	#stores all the token types
 	keyword='KEYWORD'
 	sym='SYMBOL'
 	ident='IDENTIFIER'
 	intc='INT_CONST'
 	string_c='STRING_CONST'
+
+	#for off setting the xml attributes in the output file
 	space = ' '
 	spaceCount = 0
 	
+	#look up table for xml attributes
 	xml={'classb':'<class>','classe':'</class>','classVarDecb':'<classVarDec>','classVarDece':'</classVarDec>'
 		,'subroutineDecb':'<subroutineDec>','subroutineDece':'</subroutineDec>','parameterListb':'<parameterList>','parameterListe':'</parameterList>'
 		,'subroutineBodyb':'<subroutineBody>','subroutineBodye':'</subroutineBody>','varDecb':'<varDec>','varDece':'</varDec>'
@@ -55,7 +60,10 @@ class CompilationEngine:
 		,'StringConstante':'</stringConstant>','identifierb':'<identifier>','identifiere':'</identifier>','keywordb':'<keyword>','keyworde':'</keyword>',
 		'symbolb':'<symbol>', 'symbole':'</symbol>'}
 	
-	
+	#--------------------------------------------------------------------------
+	# Class declaration:
+	#--------------------------------------------------------------------------
+
 	#------------------------------------------------------------------------------
 	# This is the constructor
 	def __init__(self,infile,outfile):
@@ -63,30 +71,38 @@ class CompilationEngine:
 		self.token = JackToken(infile)
 	
 	#------------------------------------------------------------------------------
-	# This method compiles the class
+	# This method compiles the entire class contained in the input file
 	def compileClass(self):
 		self.of.write((self.space*self.spaceCount)+self.xml['classb']+'\n')
 		self.spaceCount += 1
 		self.token.advance()
+
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
+
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
 				if self.key_class in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 				
+				#if the keyword is static or field then it is known that it is a class var dec
+				#at this level of compilation
 				elif self.key_static in tempkey or self.key_field in tempkey:
 					self.compileClassVarDec()
-					continue
+					continue #continue because there maybe more then one class var and don't want to advane tokenizer
 
+				#if the keyword is a subroutine type
 				elif self.key_constructor in tempkey or self.key_method in tempkey or self.key_function in tempkey:
 					self.compileSubroutine()
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
+
+				#if we run into } at this level then we are at the end of the class
 				if '}' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					break
+
 				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 
 			elif self.ident in tokentype:
@@ -97,6 +113,7 @@ class CompilationEngine:
 
 		self.spaceCount -= 1
 		self.of.write((self.space*self.spaceCount)+self.xml['classe'])
+		self.of.close()
 
 	#------------------------------------------------------------------------------
 	# This method compiles class var dec
@@ -104,18 +121,19 @@ class CompilationEngine:
 		self.of.write((self.space*self.spaceCount)+self.xml['classVarDecb']+'\n')
 		self.spaceCount += 1
 
-		ifSemiCol = False
-
 		while self.token.hasMoreTokens:
 			tokentype = self.token.tokenType()
+
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
+
 				if self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 				elif self.key_static in tempkey or self.key_field in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
+				#if we run into a subroutine declaration then we break
 				elif self.key_function in tempkey or self.key_method in tempkey or self.key_constructor in tempkey:
 					break
 					
@@ -125,13 +143,13 @@ class CompilationEngine:
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
-				if ',' in tempsym and ifSemiCol:
-					print("ERROR: syntax violation a ',' came after ';'\n")
-					sys.exit(0)
+
+				#if it runs into any of the below symboles then it is an invalid var decleration
 				if re.search('[\(\)\{\}\[\]\.\+\-\*\/\&\<\>\=\~]{1}',tempsym) is not None:
 					print(self.token.errorMsg())
 					sys.exit(0)
 
+				#if we run into a ; then it is the end of this particular class var dec
 				if ';' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
@@ -150,37 +168,57 @@ class CompilationEngine:
 		self.of.write((self.space*self.spaceCount)+self.xml['subroutineDecb']+'\n')
 		self.spaceCount += 1
 
+		if_param = False #ensures that at least an empty param list is discovered
+
 		while self.token.hasMoreTokens:
 			tokentype = self.token.tokenType()
+
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
+
 				if self.key_method in tempkey or self.key_function in tempkey or self.key_constructor in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 				elif self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey or self.key_void in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
+				#if the keyward var is in tempkey then we need to compile a vardeck
 				elif self.key_var in tempkey:
 					self.compileVarDec()
 
+				#if it runs into any keywords that aren't caught by the above statements then it is no longer
+				#in a subroutine
 				else:
 					break
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
+
+				#if it runs into a ( then it is descovering a parameter list
 				if '(' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
+					#compiles the parameter list
 					self.compileParameterList()
+
 					self.of.write((self.space*self.spaceCount)+self.xml['subroutineBodyb']+'\n')
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
-				else:
+					if_param = True #set param list discovered to true
+
+				#if it has fond at lest an empty paramlist then it can print the next symboles 
+				elif if_param:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+
+				#error
+				else:
+					print(self.token.errorMsg())
+					sys.exit(0)
 
 			elif self.ident in tokentype:
 				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+self.token.identifier()+self.xml['identifiere']+'\n')
 
 			self.token.advance()
+
 
 		self.compileStatements()
 
@@ -208,12 +246,16 @@ class CompilationEngine:
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
+
+				#if it runs into a ) means the end of the parameter list so break
 				if ')' in tempsym:
 					break
 
+				#seperation of the parameters
 				elif ',' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 
+				#any other symbol results in a an error
 				else:
 					print(self.token.errorMsg())
 					sys.exit(0)
@@ -223,6 +265,8 @@ class CompilationEngine:
 		self.spaceCount -= 1
 		self.of.write((self.space*self.spaceCount)+self.xml['parameterListe']+'\n')
 		self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+		
+		#advance twice because we are at ( so need to getpast that and need to get the next symbol
 		self.token.advance()
 		self.token.advance()
 
@@ -232,19 +276,19 @@ class CompilationEngine:
 		self.of.write((self.space*self.spaceCount)+self.xml['varDecb']+'\n')
 		self.spaceCount += 1
 
-		has_var_dec = False
-
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
 
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
+
 				if self.key_var in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 				elif self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
+				#if any keyword is docovered than what is above then the vardec is over
 				else:
 					break
 
@@ -254,8 +298,11 @@ class CompilationEngine:
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
+
 				if ',' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+
+				#once ; is found then at the end of a vardec
 				elif ';' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					break
@@ -276,12 +323,17 @@ class CompilationEngine:
 
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
+
+				#if 'let' is found then compilelet
 				if self.key_let in tempkey:
 					self.compileLet()
 
 				elif self.key_if in tempkey:
 					self.compileIf()
-					continue
+					#continue because we could have multiple if statements found and
+					#the current token could be the key word if so we don't want to advance
+					#the tokenizer prematurely
+					continue 
 
 				elif self.key_while in tempkey:
 					self.compileWhile()
@@ -292,13 +344,17 @@ class CompilationEngine:
 				elif self.key_return in tempkey:
 					self.compileReturn()
 
+				#incorrect key word at this level of compilation
 				else:
 					print(self.token.errorMsg())
 					sys.exit(0)
+
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
+				#once we run into } thats the endof statments
 				if '}' in tempsym:
 					break
+				#any other symbol discovered at this stage is an error
 				else:
 					print(self.token.errorMsg())
 					sys.exit(0)
@@ -314,20 +370,25 @@ class CompilationEngine:
 	def compileDo(self):
 		self.of.write((self.space*self.spaceCount)+self.xml['doStatementb']+'\n')
 		self.spaceCount += 1
-		subCallb = True
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
+
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
+
 				if self.key_do in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
+
+				#if any keyword other then do is discovered at this level it results in an error
 				else:
 					print(self.token.errorMsg())
 					sys.exit(0)
 
 			elif self.ident in tokentype:
+				#compiles the expression with the value for a subroutine call passed in being true
 				self.compileExpression(True)
+				#once compileexpression is done then the current token is a ; signalling the end of a dostatment
 				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
 				self.token.advance()
 				break
@@ -345,10 +406,14 @@ class CompilationEngine:
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
+
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
+
 				if self.key_let in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
+
+				#if any other keyword is discovered it is an error
 				else:
 					print(self.token.errorMsg())
 					sys.exit(0)
@@ -359,23 +424,31 @@ class CompilationEngine:
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
+				#if [ is discovered it means that it is an array access
 				if '[' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 					self.compileExpression(False)
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
 					self.token.advance()
+					#continue so that the bellow error catching isn't accidently triped hence the advance command
+					#before this
 					continue
 
+				#this means that we compile th expression on the other side of the = sign
 				elif '=' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 					self.compileExpression(False)
+					#sets tempsym to the current symbole
 					tempsym = self.token.symbol()
 				
+				#if tempsym at this point is ; then end of let statement
 				if ';' in self.token.symbol():
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					break
+
+				#othre wise it is an error
 				else:
 					print(self.token.errorMsg())
 					sys.exit(0)
@@ -393,26 +466,37 @@ class CompilationEngine:
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
+
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
+
 				if self.key_while in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
+				
+				#if any other keyword is discovered at this level it is an error
 				else:
 					print(self.token.errorMsg())
 					sys.exit(0)
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
+
+				#the condition of the while loop
 				if '(' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 					self.compileExpression(False)
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
+
+				#body of the while loop
 				elif '{' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 					self.compileStatements()
+					#once the statments are compiled the whilestatment is done
 					break
+
+				#any other symbol at this level results in an error
 				else:
 					print(self.token.errorMsg())
 					sys.exit(0)
@@ -430,17 +514,21 @@ class CompilationEngine:
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
+
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
+
 				if self.key_return in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
+				#Any other keyword means that an exprssion is to be compiled and return is done
 				else:
 					self.compileExpression(False)
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
 					self.token.advance()
 					break
 
+			#other wise compile expression
 			elif self.ident in tokentype or self.string_c in tokentype or self.intc in tokentype:
 				self.compileExpression(False)
 				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
@@ -449,9 +537,12 @@ class CompilationEngine:
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
+
+				#denotes the end of a return statment
 				if ';' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					break
+				#any other symbol at this level is an error
 				else:
 					print(self.token.errorMsg())
 					sys.exit(0)
@@ -467,12 +558,14 @@ class CompilationEngine:
 		self.of.write((self.space*self.spaceCount)+self.xml['ifStatementb']+'\n')
 		self.spaceCount += 1
 
-		seen_once = True
+		seen_once = True #this means that keyword if has been seen only once
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
+			
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
+
 				if self.key_if in tempkey and seen_once:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 					seen_once = False
