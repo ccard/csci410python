@@ -94,4 +94,38 @@ class SymbolTable:
 
 			return count
 
-	#
+	#--------------------------------------------------------------------------
+	# This Method returns the kind of a identifier
+	def kindOf(self,name):
+		if name in self.kindClass:
+			return self.kindClass[name]
+
+		elif name in self.kindSub:
+			return self.kindSub[name]
+
+		else:
+			return "NONE"
+
+	#--------------------------------------------------------------------------
+	# This returns the type of an identifier
+	def typeOf(self,name):
+		if name in self.typeClass:
+			return self.typeClass[name]
+
+		elif name in self.typeSub:
+			return self.typeSub[name]
+
+		else:
+			return "NONE"
+
+	#--------------------------------------------------------------------------
+	# This returns the index of an identifier
+	def indexOf(self,name):
+		if name in self.indexClass:
+			return self.indexClass[name]
+
+		elif name in self.indexSub:
+			return self.indexSub[name]
+
+		else:
+			return "NONE"
