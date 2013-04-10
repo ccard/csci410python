@@ -1,6 +1,6 @@
 import sys, string, os, io,re
 from jacktokenizer import JackToken
-from compilationengine import CompilationEngine
+from compilationenginexml import CompilationEngine
 #------------------------------------------------------------------------------
 #Chris Card
 #CS410
