@@ -6,7 +6,6 @@ from jacktokenizer import JackToken
 #ECS project 10
 #python 3.3
 #Due:3/25/13
-#This is the main of the program run this
 #------------------------------------------------------------------------------
 
 class CompilationEngine:
