@@ -1,5 +1,6 @@
 import sys, string, os, io,re
 from jacktokenizer import JackToken
+from symboltable import SymbolTable
 #------------------------------------------------------------------------------
 #Chris Card
 #CS410
@@ -68,6 +69,7 @@ class CompilationEngine:
 	def __init__(self,infile,outfile):
 		self.of = open(outfile,'w')
 		self.token = JackToken(infile)
+		self.table = SymbolTable()
 	
 	#------------------------------------------------------------------------------
 	# This method compiles the entire class contained in the input file
@@ -106,6 +108,7 @@ class CompilationEngine:
 
 			elif self.ident in tokentype:
 				tempident = self.token.identifier()
+				self.currClassName = tempident
 				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
 
 			self.token.advance()
@@ -120,6 +123,10 @@ class CompilationEngine:
 		self.of.write((self.space*self.spaceCount)+self.xml['classVarDecb']+'\n')
 		self.spaceCount += 1
 
+		curtype = ""
+		curkind = ""
+		curname = ""
+
 		while self.token.hasMoreTokens:
 			tokentype = self.token.tokenType()
 
@@ -127,9 +134,11 @@ class CompilationEngine:
 				tempkey = self.token.keyWord()
 
 				if self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey:
+					curtype = tempkey
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 				elif self.key_static in tempkey or self.key_field in tempkey:
+					curkind = tempkey
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 				#if we run into a subroutine declaration then we break
@@ -138,6 +147,10 @@ class CompilationEngine:
 					
 			elif self.ident in tokentype:
 				tempident = self.token.identifier()
+				if len(curtype) == 0:
+					curtype = tempident
+				else:
+					curname = tempident
 				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
 
 			elif self.sym in tokentype:
@@ -152,8 +165,10 @@ class CompilationEngine:
 				if ';' in tempsym:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
+					self.table.Define(curname,curtype,curkind)
 					break
-
+				self.table.Define(curname,curtype,curkind)
+				curname = ''
 				self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 
 			self.token.advance()
@@ -167,7 +182,11 @@ class CompilationEngine:
 		self.of.write((self.space*self.spaceCount)+self.xml['subroutineDecb']+'\n')
 		self.spaceCount += 1
 
+		self.table.startSubroutine()
+
 		if_param = False #ensures that at least an empty param list is discovered
+
+		isConstruct = False
 
 		while self.token.hasMoreTokens:
 			tokentype = self.token.tokenType()
@@ -177,6 +196,7 @@ class CompilationEngine:
 
 				if self.key_method in tempkey or self.key_function in tempkey or self.key_constructor in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
+					isConstruct = True if self.key_constructor in tempkey else False
 
 				elif self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey or self.key_void in tempkey:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
@@ -198,7 +218,7 @@ class CompilationEngine:
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 					#compiles the parameter list
-					self.compileParameterList()
+					self.compileParameterList(isConstruct)
 
 					self.of.write((self.space*self.spaceCount)+self.xml['subroutineBodyb']+'\n')
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
@@ -228,19 +248,31 @@ class CompilationEngine:
 
 	#------------------------------------------------------------------------------
 	# This method compiles the parameter list
-	def compileParameterList(self):
+	def compileParameterList(self,isConstruct):
 		self.of.write((self.space*self.spaceCount)+self.xml['parameterListb']+'\n')
 		self.spaceCount += 1
+
+		curname = ''
+		curtype = ''
+		curkind = ''
+
+		if not isConstruct:
+			self.table.Define('this',self.currClassName,'ARG')
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
 
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
+				curtype = tempkey
 				self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 			elif self.ident in tokentype:
 				tempident = self.token.identifier()
+				if len(curtype) == 0:
+					curtype = tempident
+				else:
+					curname = tempident
 				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
 
 			elif self.sym in tokentype:
@@ -248,10 +280,14 @@ class CompilationEngine:
 
 				#if it runs into a ) means the end of the parameter list so break
 				if ')' in tempsym:
+					self.table.Define(curname, curtype, 'ARG')
 					break
 
 				#seperation of the parameters
 				elif ',' in tempsym:
+					self.table.Define(curname, curtype, 'ARG')
+					curname = ''
+					curtype = ''
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 
 				#any other symbol results in a an error
@@ -275,6 +311,9 @@ class CompilationEngine:
 		self.of.write((self.space*self.spaceCount)+self.xml['varDecb']+'\n')
 		self.spaceCount += 1
 
+		curname = ''
+		curtype = ''
+
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
 
@@ -285,6 +324,7 @@ class CompilationEngine:
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 				elif self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey:
+					curtype = tempkey
 					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
 
 				#if any keyword is docovered than what is above then the vardec is over
@@ -293,16 +333,23 @@ class CompilationEngine:
 
 			elif self.ident in tokentype:
 				tempident = self.token.identifier()
+				if len(curtype) == 0:
+					curtype = tempident
+				else:
+					curname = tempident
 				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
 
 				if ',' in tempsym:
+					self.table.Define(curname,curtype, 'VAR')
+					curname = ''
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 
 				#once ; is found then at the end of a vardec
 				elif ';' in tempsym:
+					self.table.Define(curname,curtype, 'VAR')
 					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					break
 
@@ -419,7 +466,12 @@ class CompilationEngine:
 
 			elif self.ident in tokentype:
 				tempident = self.token.identifier()
-				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
+				self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+'\n')
+				self.of.write((self.space*(self.spaceCount+1))+'<name>'+tempident+'</name>'+'\n')
+				self.of.write((self.space*(self.spaceCount+1))+'<type>'+self.table.typeOf(tempident)+'</type>'+'\n')
+				self.of.write((self.space*(self.spaceCount+1))+'<kind>'+self.table.kindOf(tempident)+'</kind>'+'\n')
+				self.of.write((self.space*(self.spaceCount+1))+'<index>'+repr(self.table.indexOf(tempident))+'</index>'+'\n')
+				self.of.write((self.space*self.spaceCount)+self.xml['identifiere']+'\n')
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
@@ -675,7 +727,13 @@ class CompilationEngine:
 				#means that it as a call to a var or class method
 				if '.' in peaks:
 					#replace this with code to do a look up
-					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
+					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+'\n')
+					self.of.write((self.space*(self.spaceCount+1))+'<name>'+tempident+'</name>'+'\n')
+					self.of.write((self.space*(self.spaceCount+1))+'<type>'+self.table.typeOf(tempident)+'</type>'+'\n')
+					self.of.write((self.space*(self.spaceCount+1))+'<kind>'+self.table.kindOf(tempident)+'</kind>'+'\n')
+					self.of.write((self.space*(self.spaceCount+1))+'<index>'+repr(self.table.indexOf(tempident))+'</index>'+'\n')
+					self.of.write((self.space*self.spaceCount)+self.xml['identifiere']+'\n')
+
 					self.token.advance()
 
 					tempsym = self.token.symbol()
@@ -707,7 +765,12 @@ class CompilationEngine:
 
 				#this means that it is accessing an array element
 				elif '[' in peaks:
-					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
+					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+'\n')
+					self.of.write((self.space*(self.spaceCount+1))+'<name>'+tempident+'</name>'+'\n')
+					self.of.write((self.space*(self.spaceCount+1))+'<type>'+self.table.typeOf(tempident)+'</type>'+'\n')
+					self.of.write((self.space*(self.spaceCount+1))+'<kind>'+self.table.kindOf(tempident)+'</kind>'+'\n')
+					self.of.write((self.space*(self.spaceCount+1))+'<index>'+repr(self.table.indexOf(tempident))+'</index>'+'\n')
+					self.of.write((self.space*self.spaceCount)+self.xml['identifiere']+'\n')
 					self.token.advance()
 					
 					tempsym = self.token.symbol()
@@ -721,7 +784,12 @@ class CompilationEngine:
 
 				#other wise it is just an identifier
 				else:
-					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
+					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+'\n')
+					self.of.write((self.space*(self.spaceCount+1))+'<name>'+tempident+'</name>'+'\n')
+					self.of.write((self.space*(self.spaceCount+1))+'<type>'+self.table.typeOf(tempident)+'</type>'+'\n')
+					self.of.write((self.space*(self.spaceCount+1))+'<kind>'+self.table.kindOf(tempident)+'</kind>'+'\n')
+					self.of.write((self.space*(self.spaceCount+1))+'<index>'+repr(self.table.indexOf(tempident))+'</index>'+'\n')
+					self.of.write((self.space*self.spaceCount)+self.xml['identifiere']+'\n')
 
 			elif self.intc in tokentype:
 				self.of.write((self.space*self.spaceCount)+self.xml['integerConstantb']+self.token.intVal()+self.xml['integerConstante']+'\n')
