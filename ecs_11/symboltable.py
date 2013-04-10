@@ -37,7 +37,7 @@ class SymbolTable:
 	#--------------------------------------------------------------------------
 
 	def __init__(self):
-
+		self.ji=""
 
 	#--------------------------------------------------------------------------
 	# This clears all subrouting tables (chaging the scope)
@@ -97,11 +97,11 @@ class SymbolTable:
 	#--------------------------------------------------------------------------
 	# This Method returns the kind of a identifier
 	def kindOf(self,name):
-		if name in self.kindClass:
-			return self.kindClass[name]
-
-		elif name in self.kindSub:
+		if name in self.kindSub:
 			return self.kindSub[name]
+
+		elif name in self.kindClass:
+			return self.kindClass[name]
 
 		else:
 			return "NONE"
@@ -109,11 +109,11 @@ class SymbolTable:
 	#--------------------------------------------------------------------------
 	# This returns the type of an identifier
 	def typeOf(self,name):
-		if name in self.typeClass:
-			return self.typeClass[name]
-
-		elif name in self.typeSub:
+		if name in self.typeSub:
 			return self.typeSub[name]
+
+		elif name in self.typeClass:
+			return self.typeClass[name]
 
 		else:
 			return "NONE"
@@ -121,11 +121,11 @@ class SymbolTable:
 	#--------------------------------------------------------------------------
 	# This returns the index of an identifier
 	def indexOf(self,name):
-		if name in self.indexClass:
-			return self.indexClass[name]
-
-		elif name in self.indexSub:
+		if name in self.indexSub:
 			return self.indexSub[name]
+
+		elif name in self.indexClass:
+			return self.indexClass[name]
 
 		else:
 			return "NONE"
