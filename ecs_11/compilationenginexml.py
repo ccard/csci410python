@@ -7,6 +7,7 @@ from symboltable import SymbolTable
 #ECS project 10
 #python 3.3
 #Due:3/25/13
+#This compiles the files into xml files for debuggin purposes
 #------------------------------------------------------------------------------
 
 class CompilationEngine:
