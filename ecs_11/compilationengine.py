@@ -159,8 +159,6 @@ class CompilationEngine:
 
 		isConstruct = False
 
-		localCount = 0
-
 		while self.token.hasMoreTokens:
 			tokentype = self.token.tokenType()
 
@@ -169,18 +167,19 @@ class CompilationEngine:
 
 				if self.key_method in tempkey or self.key_function in tempkey or self.key_constructor in tempkey:
 					isConstruct = True if self.key_constructor in tempkey else False
+					isConstruct = True if self.key_function in tempkey else False
 
 				elif self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey or self.key_void in tempkey:
 					self.curSubType = tempkey
 
 				#if the keyward var is in tempkey then we need to compile a vardeck
 				elif self.key_var in tempkey:
-					localCount += self.compileVarDec()
+					self.compileVarDec()
 
 				#if it runs into any keywords that aren't caught by the above statements then it is no longer
 				#in a subroutine
 				else:
-					self.writer.writeFunction(self.currClassName+self.curSubName,localCount)
+					self.writer.writeFunction(self.currClassName+self.curSubName,self.table.varCount('VAR'))
 					break
 
 			elif self.sym in tokentype:
@@ -208,8 +207,12 @@ class CompilationEngine:
 
 			self.token.advance()
 
+		if 'NONE' not in self.table.kindOf('this'):
+			self.writer.writePush(self.segment[self.table.kindOf('this')],self.table.indexOf('this'))
+			self.writer.writePop('pointer','0')
 
 		self.compileStatements()
+
 		self.loopCounter = 0
 		self.ifCounter = 0
 		self.curSubName = ''
@@ -269,8 +272,6 @@ class CompilationEngine:
 		curname = ''
 		curtype = ''
 
-		varCount = 0
-
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
 
@@ -300,17 +301,13 @@ class CompilationEngine:
 				if ',' in tempsym:
 					self.table.Define(curname,curtype, 'VAR')
 					curname = ''
-					varCount += 1
 
 				#once ; is found then at the end of a vardec
 				elif ';' in tempsym:
 					self.table.Define(curname,curtype, 'VAR')
-					varCount += 1
 					break
 
 			self.token.advance()
-
-		return varCount
 
 	#------------------------------------------------------------------------------
 	# This method compiles the statements
@@ -617,20 +614,15 @@ class CompilationEngine:
 
 			self.token.advance()
 
-		if not ifElse:
-			self.writer.writeLabel(currIf)
+		if ifElse:
+			self.writer.writeLabel(currIfExit)
 
 		else:
-			self.writer.writeLabel(currIfExit)
+			self.writer.writeLabel(currIf)
 
 	#------------------------------------------------------------------------------
 	# This method compiles the expression
 	def compileExpression(self,subCall):
-		#if it a subrountine call don't want to print out the exprssion attribute
-		if not subCall:
-			self.of.write((self.space*self.spaceCount)+self.xml['expressionb']+'\n')
-
-		self.spaceCount += 1
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
@@ -638,44 +630,22 @@ class CompilationEngine:
 			if self.sym in tokentype:
 				tempsym = self.token.symbol()
 
-				#if it is an operator then print out the appropriate xml attribute statement
-				if tempsym in '+-*/&|<>=':
-					if '<' in tempsym:
-						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&lt;"+self.xml['symbole']+'\n')
-
-					elif '>' in tempsym:
-						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&gt;"+self.xml['symbole']+'\n')
-
-					elif '&' in tempsym:
-						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&amp;"+self.xml['symbole']+'\n')
-
-					else:
-						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
-
 				#this means that we have term to compile
-				elif tempsym in '(~':
-					self.compileTerm(subCall)
+				elif tempsym in '(~-':
+					self.compileTerm(subCall,True)
 
 				#signifies the end of an expression
 				elif tempsym in ';)],':
 					break
 
 			else:
-				self.compileTerm(subCall)
+				self.compileTerm(subCall,False)
 
 			self.token.advance()
 
-		self.spaceCount -= 1
-		if not subCall:
-			self.of.write((self.space*self.spaceCount)+self.xml['expressione']+'\n')
-
 	#------------------------------------------------------------------------------
 	# This method compiles the term
-	def compileTerm(self,subCall):
-		if not subCall:
-			self.of.write((self.space*self.spaceCount)+self.xml['termb']+'\n')
-
-		self.spaceCount += 1
+	def compileTerm(self,subCall,isUnary):
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
@@ -683,8 +653,19 @@ class CompilationEngine:
 			if self.keyword in tokentype:
 				tempkey = self.token.keyWord()
 
-				if self.key_true in tempkey or self.key_false in tempkey or self.key_null in tempkey or self.key_this in tempkey:
-					self.of.write((self.space*self.spaceCount)+self.xml['keywordb']+tempkey.lower()+self.xml['keyworde']+'\n')
+				if self.key_true in tempkey:
+					self.writer.writePush('constant','0')
+					self.writer.writeArithmetic('NEG')
+
+				elif self.key_false in tempkey:
+					self.writer.writePush('constant','0')
+
+				elif self.key_null in tempkey:
+					s= "have no clue how to do this"
+
+				elif self.key_this in tempkey:
+					self.writer.writePush('this','0')
+					
 				
 				#any other keyword than the ones above results in an error
 				else:
@@ -698,26 +679,35 @@ class CompilationEngine:
 
 				#means that it as a call to a var or class method
 				if '.' in peaks:
+					callName = ''
 					#replace this with code to do a look up
-					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+'\n')
-					self.of.write((self.space*(self.spaceCount+1))+'<name>'+tempident+'</name>'+'\n')
-					self.of.write((self.space*(self.spaceCount+1))+'<type>'+self.table.typeOf(tempident)+'</type>'+'\n')
-					self.of.write((self.space*(self.spaceCount+1))+'<kind>'+self.table.kindOf(tempident)+'</kind>'+'\n')
-					self.of.write((self.space*(self.spaceCount+1))+'<index>'+repr(self.table.indexOf(tempident))+'</index>'+'\n')
-					self.of.write((self.space*self.spaceCount)+self.xml['identifiere']+'\n')
+					typeof = self.table.typeOf(tempident)
+					if 'NONE' in typeof:
+					 	callName = tempident
+
+					 else:
+					 	callName = typeof
+					 	#put in code to push this on to the stack
 
 					self.token.advance()
 
-					tempsym = self.token.symbol()
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+					callName += self.token.symbol()
+
 					self.token.advance()
 
-					tempident = self.token.identifier()
-					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
+					if self.ident in self.token.tokenType():
+						callName += self.token.identifier()
+
+					else:
+						print(self.token.errorMsg())
+						sys.exit(0)
+					
 					self.token.advance()
 
-					tempsym = self.token.symbol()
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+					if self.sym not in self.token.tokenType():
+						print(self.token.errorMsg())
+						sys.exit()
+
 					self.token.advance()
 
 					#then compiles the expression list
