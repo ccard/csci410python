@@ -48,12 +48,34 @@ class VMWriter:
 	#--------------------------------------------------------------------------
 	# This writes a lable
 	def writeLabel(self, label):
-		self.out.write(label+'\n')
+		self.out.write('label '+label+'\n')
 
 	#--------------------------------------------------------------------------
 	# This writes a gotto
 	def writeGoto(self, label):
-		self.out.write(label+'\n')
+		self.out.write('goto '+label+'\n')
 
+	#--------------------------------------------------------------------------
+	# This writes an if statement
+	def writeIf(self,label):
+		self.out.write('if-goto '+label+'\n')
 
+	#--------------------------------------------------------------------------
+	# This writes a function call
+	def writeCall(self,name,nArgs):
+		self.out.write('call '+name+' '+repr(nArgs)+'\n')
 
+	#--------------------------------------------------------------------------
+	# This writes a function delceration
+	def writeFunction(self,name,nLocals):
+		self.out.write('function '+name+' '+repr(nLocals)+'\n')
+
+	#--------------------------------------------------------------------------
+	# This writes a return
+	def writeReturn(self):
+		self.out.write('return\n')
+
+	#--------------------------------------------------------------------------
+	# This closes the output
+	def close(self):
+		self.out.close()
