@@ -687,7 +687,7 @@ class CompilationEngine:
 
 					 else:
 					 	callName = typeof
-					 	#put in code to push this on to the stack
+					 	self.writer.writePush(self.segment[self.table.kindOf(tempident)],self.table.indexOf(tempident))
 
 					self.token.advance()
 
@@ -715,56 +715,55 @@ class CompilationEngine:
 
 				#this means that it is a subroutine call to one of its own methods
 				elif '(' in peaks:
-
-					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+tempident+self.xml['identifiere']+'\n')
-					self.token.advance()
+					self.writer.writePush('pointer','0')
 					
-					tempsym = self.token.symbol()
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
+					self.token.advance()
 					self.token.advance()
 
 					self.compileExpressionList()
 
 				#this means that it is accessing an array element
 				elif '[' in peaks:
-					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+'\n')
-					self.of.write((self.space*(self.spaceCount+1))+'<name>'+tempident+'</name>'+'\n')
-					self.of.write((self.space*(self.spaceCount+1))+'<type>'+self.table.typeOf(tempident)+'</type>'+'\n')
-					self.of.write((self.space*(self.spaceCount+1))+'<kind>'+self.table.kindOf(tempident)+'</kind>'+'\n')
-					self.of.write((self.space*(self.spaceCount+1))+'<index>'+repr(self.table.indexOf(tempident))+'</index>'+'\n')
-					self.of.write((self.space*self.spaceCount)+self.xml['identifiere']+'\n')
 					self.token.advance()
-					
-					tempsym = self.token.symbol()
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
+					kind = self.table.kindOf(tempident)
+
+					if "NONE" in kind:
+						print(self.token.errorMsg()+"Undefined Variable\n")
+						sys.exit(0)
+
+					self.writer.writePush(self.segment[kind],self.table.indexOf(tempident))
 
 					self.compileExpression(subCall)
 
+					self.writer.writeArithmetic('+')
+
+					self.writer.writePop('pointer','1')
+					#ended here need to check my logic here
+
 					tempsym = self.token.symbol()
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 
 				#other wise it is just an identifier
 				else:
-					self.of.write((self.space*self.spaceCount)+self.xml['identifierb']+'\n')
-					self.of.write((self.space*(self.spaceCount+1))+'<name>'+tempident+'</name>'+'\n')
-					self.of.write((self.space*(self.spaceCount+1))+'<type>'+self.table.typeOf(tempident)+'</type>'+'\n')
-					self.of.write((self.space*(self.spaceCount+1))+'<kind>'+self.table.kindOf(tempident)+'</kind>'+'\n')
-					self.of.write((self.space*(self.spaceCount+1))+'<index>'+repr(self.table.indexOf(tempident))+'</index>'+'\n')
-					self.of.write((self.space*self.spaceCount)+self.xml['identifiere']+'\n')
+					kind = self.table.kindOf(tempident)
+
+					if "NONE" in kind:
+						print(self.token.errorMsg()+"Undefined Variable\n")
+						sys.exit(0)
+
+					self.writer.writePush(self.segment[kind],self.table.indexOf(tempident))
 
 			elif self.intc in tokentype:
-				self.of.write((self.space*self.spaceCount)+self.xml['integerConstantb']+self.token.intVal()+self.xml['integerConstante']+'\n')
+				self.writer.writePush('constant',self.token.intVal())
 
 			elif self.string_c in tokentype:
-				self.of.write((self.space*self.spaceCount)+self.xml['StringConstantb']+self.token.stringVal()+self.xml['StringConstante']+'\n')
+				s= 'what do i do for string values'
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
 
 				#this means that it is and expression surrounded by ()
 				if '(' in tempsym:
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
 					self.compileExpression(subCall)
 
