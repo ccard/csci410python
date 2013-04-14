@@ -797,9 +797,7 @@ class CompilationEngine:
 				#indicates that end of expression list
 				elif ')' in tempsym:
 					break
-				#other wise compile expression
-				else:
-					self.compileExpression(False)
+					
 			else:
 				self.compileExpression(False)
 
