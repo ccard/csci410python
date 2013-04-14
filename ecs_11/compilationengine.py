@@ -159,6 +159,8 @@ class CompilationEngine:
 
 		isConstruct = False
 
+		isFunct = False
+
 		while self.token.hasMoreTokens:
 			tokentype = self.token.tokenType()
 
@@ -167,7 +169,7 @@ class CompilationEngine:
 
 				if self.key_method in tempkey or self.key_function in tempkey or self.key_constructor in tempkey:
 					isConstruct = True if self.key_constructor in tempkey else False
-					isConstruct = True if self.key_function in tempkey else False
+					isFunct = True if self.key_function in tempkey else False
 
 				elif self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey or self.key_void in tempkey:
 					self.curSubType = tempkey
@@ -189,7 +191,7 @@ class CompilationEngine:
 				if '(' in tempsym:
 					self.token.advance()
 					#compiles the parameter list
-					self.compileParameterList(isConstruct)
+					self.compileParameterList(isConstruct or isFunct)
 
 					if_param = True #set param list discovered to true
 
@@ -203,12 +205,21 @@ class CompilationEngine:
 					sys.exit(0)
 
 			elif self.ident in tokentype:
-				self.curSubName = self.token.identifier()
+				if len(self.curSubType) == 0:
+					self.curSubType = self.token.identifier()
+
+				else:
+					self.curSubName = self.token.identifier()
 
 			self.token.advance()
 
 		if 'NONE' not in self.table.kindOf('this'):
 			self.writer.writePush(self.segment[self.table.kindOf('this')],self.table.indexOf('this'))
+			self.writer.writePop('pointer','0')
+
+		if isConstruct:
+			self.writer.writePush('constant',repr(self.table.varCount('FIELD')))
+			self.writer.writeCall('Memory.alloc',1)
 			self.writer.writePop('pointer','0')
 
 		self.compileStatements()
@@ -550,7 +561,10 @@ class CompilationEngine:
 
 				#denotes the end of a return statment
 				if ';' in tempsym:
-					if self.key_void not in self.curSubType:
+					if self.curSubType == self.currClassName:
+						self.writer.writePush('pointer','0')
+
+					elif self.key_void not in self.curSubType:
 						print(self.token.errorMsg()+'must return something\n')
 						sys.exit(0)
 
@@ -564,6 +578,8 @@ class CompilationEngine:
 					sys.exit(0)
 
 			self.token.advance()
+
+		self.writer.writeReturn()
 		
 	#------------------------------------------------------------------------------
 	# This method compiles the ifStatement
@@ -654,14 +670,14 @@ class CompilationEngine:
 				tempkey = self.token.keyWord()
 
 				if self.key_true in tempkey:
-					self.writer.writePush('constant','0')
+					self.writer.writePush('constant','1')
 					self.writer.writeArithmetic('NEG')
 
 				elif self.key_false in tempkey:
 					self.writer.writePush('constant','0')
 
 				elif self.key_null in tempkey:
-					s= "have no clue how to do this"
+					self.writer.writePush('constant','0')
 
 				elif self.key_this in tempkey:
 					self.writer.writePush('this','0')
@@ -685,7 +701,7 @@ class CompilationEngine:
 					if 'NONE' in typeof:
 					 	callName = tempident
 
-					 else:
+					else:
 					 	callName = typeof
 					 	self.writer.writePush(self.segment[self.table.kindOf(tempident)],self.table.indexOf(tempident))
 
@@ -711,7 +727,9 @@ class CompilationEngine:
 					self.token.advance()
 
 					#then compiles the expression list
-					self.compileExpressionList()
+					numArgs = self.compileExpressionList()
+
+					self.writer.writeCall(callName,numArgs)
 
 				#this means that it is a subroutine call to one of its own methods
 				elif '(' in peaks:
@@ -720,7 +738,9 @@ class CompilationEngine:
 					self.token.advance()
 					self.token.advance()
 
-					self.compileExpressionList()
+					numArgs = self.compileExpressionList()
+
+					self.writer.writeCall(self.currClassName+'.'+self.curSubName,numArgs)
 
 				#this means that it is accessing an array element
 				elif '[' in peaks:
@@ -739,9 +759,8 @@ class CompilationEngine:
 					self.writer.writeArithmetic('+')
 
 					self.writer.writePop('pointer','1')
-					#ended here need to check my logic here
-
-					tempsym = self.token.symbol()
+					
+					self.writer.writePush('that','0')
 
 				#other wise it is just an identifier
 				else:
@@ -757,7 +776,12 @@ class CompilationEngine:
 				self.writer.writePush('constant',self.token.intVal())
 
 			elif self.string_c in tokentype:
-				s= 'what do i do for string values'
+				string = self.token.stringVal()
+				self.writer.writePush('constant', repr(len(string)))
+				self.writer.writeCall('String.new',1)
+				for c in string:
+					self.writer.writePush('constant',repr(ord(c)))
+					self.writer.writeCall('String.appendChar',2)
 
 			elif self.sym in tokentype:
 				tempsym = self.token.symbol()
@@ -767,32 +791,35 @@ class CompilationEngine:
 					self.token.advance()
 					self.compileExpression(subCall)
 
-					tempsym = self.token.symbol()
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
-
 				#not unary operator 
 				elif '~' in tempsym:
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
-					self.compileTerm(subCall)
+
+					self.compileTerm(subCall,False)
+
+					self.writer.writeArithmetic(tempsym)
+
+				elif '-' in tempsym and isUnary:
+					self.token.advance()
+
+					self.compileTerm(subCall,False)
+
+					self.writer.writeArithmetic('NEG')
 
 				#operator
 				elif tempsym in '+-*/&|<>=':
-					self.spaceCount -= 1
-					self.of.write((self.space*self.spaceCount)+self.xml['terme']+'\n')
-					if '<' in tempsym:
-						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&lt;"+self.xml['symbole']+'\n')
+					self.token.advance()
 
-					elif '>' in tempsym:
-						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&gt;"+self.xml['symbole']+'\n')
+					self.compileTerm(subCall,False)
 
-					elif '&' in tempsym:
-						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+"&amp;"+self.xml['symbole']+'\n')
+					if '*' in tempsym:
+						self.writer.writeCall('Math.multiply',2)
+
+					elif '/' in tempsym:
+						self.writer.writeCall('Math.divide',2)
 
 					else:
-						self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
-
-					return
+						self.writer.writeArithmetic(tempsym)
 					
 			#if the next token is ]);, means the end of a term
 			if self.token.peak() in ']);,':
@@ -800,15 +827,10 @@ class CompilationEngine:
 
 			self.token.advance()
 
-		self.spaceCount -= 1
-		if not subCall:
-			self.of.write((self.space*self.spaceCount)+self.xml['terme']+'\n')
-
 	#------------------------------------------------------------------------------
 	# This method compiles the expressionList
 	def compileExpressionList(self):
-		self.of.write((self.space*self.spaceCount)+self.xml['expressionListb']+'\n')
-		self.spaceCount += 1
+		expressCount = 0
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
@@ -818,21 +840,23 @@ class CompilationEngine:
 
 				#indicates teh start of another expression
 				if ',' in tempsym:
-					self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+tempsym+self.xml['symbole']+'\n')
 					self.token.advance()
+
 					self.compileExpression(False)
+
+					expressCount += 1
 
 				#indicates that end of expression list
 				elif ')' in tempsym:
 					break
-				#other wise compile expression
+
 				else:
-					self.compileExpression(False)
+					print(self.token.errorMsg())
+					sys.exit(0)
 			else:
 				self.compileExpression(False)
+				expressCount += 1
 
-		self.spaceCount -= 1
-		self.of.write((self.space*self.spaceCount)+self.xml['expressionListe']+'\n')
-		self.of.write((self.space*self.spaceCount)+self.xml['symbolb']+self.token.symbol()+self.xml['symbole']+'\n')
+		return expressCount
 
 #-------------------End Class--------------------------------------------------
