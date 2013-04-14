@@ -10,7 +10,7 @@ from symboltable import SymbolTable
 #This compiles the files into xml files for debuggin purposes
 #------------------------------------------------------------------------------
 
-class CompilationEngine:
+class CompilationEngineXML:
 	#------------------------------------------------------------------------------
 	# Var Declar:
 	#------------------------------------------------------------------------------
