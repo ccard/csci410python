@@ -659,20 +659,20 @@ class CompilationEngine:
 
 				#this means that we have term to compile
 				if tempsym in '(~-':
-					self.compileTerm(enclosed,True)
+					self.compileTerm(enclosed,True,False,'')
 
 				#signifies the end of an expression
 				elif tempsym in ';)],':
 					break
 
 			else:
-				self.compileTerm(enclosed,enclosed)
+				self.compileTerm(enclosed,False,False,'')
 
 			self.token.advance()
 
 	#------------------------------------------------------------------------------
 	# This method compiles the term
-	def compileTerm(self,enclosed,isUnary):
+	def compileTerm(self,enclosed,isUnary,callfromTerm,prevSym):
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
@@ -743,8 +743,6 @@ class CompilationEngine:
 					numArgs += self.compileExpressionList()
 
 					self.writer.writeCall(callName,numArgs)
-					if isUnary:
-						break
 
 				#this means that it is a subroutine call to one of its own methods
 				elif '(' in peaks:
@@ -756,8 +754,6 @@ class CompilationEngine:
 					numArgs = self.compileExpressionList()+1
 
 					self.writer.writeCall(self.currClassName+'.'+tempident,numArgs if numArgs != 0 else 1)
-					if isUnary:
-						break
 
 				#this means that it is accessing an array element
 				elif '[' in peaks:
@@ -779,9 +775,6 @@ class CompilationEngine:
 					
 					self.writer.writePush('that','0')
 
-					if isUnary:
-						break
-
 				#other wise it is just an identifier
 				else:
 					kind = self.table.kindOf(tempident)
@@ -791,8 +784,6 @@ class CompilationEngine:
 						sys.exit(0)
 
 					self.writer.writePush(self.segment[kind],repr(self.table.indexOf(tempident)))
-					if isUnary:
-						break
 
 			elif self.intc in tokentype:
 				self.writer.writePush('constant',self.token.intVal())
@@ -818,14 +809,14 @@ class CompilationEngine:
 				elif '~' in tempsym:
 					self.token.advance()
 
-					self.compileTerm(enclosed,False)
+					self.compileTerm(enclosed,False,False,prevSym)
 
 					self.writer.writeArithmetic(tempsym)
 
 				elif '-' in tempsym and isUnary and not enclosed:
 					self.token.advance()
 
-					self.compileTerm(enclosed,False)
+					self.compileTerm(enclosed,False,False,prevSym)
 
 					self.writer.writeArithmetic('NEG')
 
@@ -833,16 +824,27 @@ class CompilationEngine:
 				elif tempsym in '+-*/&|<>=':
 					self.token.advance()
 
-					self.compileTerm(enclosed,True)
+					if callfromTerm:
+						if '*' in prevSym:
+							self.writer.writeCall('Math.multiply',2)
 
-					if '*' in tempsym:
-						self.writer.writeCall('Math.multiply',2)
+						elif '/' in prevSym:
+							self.writer.writeCall('Math.divide',2)
 
-					elif '/' in tempsym:
-						self.writer.writeCall('Math.divide',2)
+						else:
+							self.writer.writeArithmetic(prevSym)
 
-					else:
-						self.writer.writeArithmetic(tempsym)
+					self.compileTerm(enclosed,False,True,tempsym)
+
+					if not callfromTerm:
+						if '*' in tempsym:
+							self.writer.writeCall('Math.multiply',2)
+	
+						elif '/' in tempsym:
+							self.writer.writeCall('Math.divide',2)
+	
+						else:
+							self.writer.writeArithmetic(tempsym)
 					
 			#if the next token is ]);, means the end of a term
 			if self.token.peak() in ']);,':
