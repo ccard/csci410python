@@ -154,10 +154,10 @@ class CompilationEngine:
 	# This method compiles the subroutines
 	def compileSubroutine(self):
 		self.table.startSubroutine()
-
+		self.curSubType = ''
 		if_param = False #ensures that at least an empty param list is discovered
 
-		isConstruct = False
+		self.isConstruct = False
 
 		isFunct = False
 
@@ -168,7 +168,7 @@ class CompilationEngine:
 				tempkey = self.token.keyWord()
 
 				if self.key_method in tempkey or self.key_function in tempkey or self.key_constructor in tempkey:
-					isConstruct = True if self.key_constructor in tempkey else False
+					self.isConstruct = True if self.key_constructor in tempkey else False
 					isFunct = True if self.key_function in tempkey else False
 
 				elif self.key_int in tempkey or self.key_char in tempkey or self.key_boolean in tempkey or self.key_void in tempkey:
@@ -181,7 +181,7 @@ class CompilationEngine:
 				#if it runs into any keywords that aren't caught by the above statements then it is no longer
 				#in a subroutine
 				else:
-					self.writer.writeFunction(self.currClassName+self.curSubName,self.table.varCount('VAR'))
+					self.writer.writeFunction(self.currClassName+'.'+self.curSubName,self.table.varCount('VAR'))
 					break
 
 			elif self.sym in tokentype:
@@ -191,7 +191,7 @@ class CompilationEngine:
 				if '(' in tempsym:
 					self.token.advance()
 					#compiles the parameter list
-					self.compileParameterList(isConstruct or isFunct)
+					self.compileParameterList(self.isConstruct or isFunct)
 
 					if_param = True #set param list discovered to true
 
@@ -214,10 +214,10 @@ class CompilationEngine:
 			self.token.advance()
 
 		if 'NONE' not in self.table.kindOf('this'):
-			self.writer.writePush(self.segment[self.table.kindOf('this')],self.table.indexOf('this'))
+			self.writer.writePush(self.segment[self.table.kindOf('this')],repr(self.table.indexOf('this')))
 			self.writer.writePop('pointer','0')
 
-		if isConstruct:
+		if self.isConstruct:
 			self.writer.writePush('constant',repr(self.table.varCount('FIELD')))
 			self.writer.writeCall('Memory.alloc',1)
 			self.writer.writePop('pointer','0')
@@ -336,10 +336,15 @@ class CompilationEngine:
 
 				elif self.key_if in tempkey:
 					self.compileIf()
-					#continue because we could have multiple if statements found and
-					#the current token could be the key word if so we don't want to advance
-					#the tokenizer prematurely
-					continue 
+					if self.sym not in self.token.tokenType():
+						#continue because we could have multiple if statements found and
+						#the current token could be the key word if so we don't want to advance
+						#the tokenizer prematurely
+						continue
+
+					else:
+						self.token.advance()
+						break
 
 				elif self.key_while in tempkey:
 					self.compileWhile()
@@ -394,7 +399,7 @@ class CompilationEngine:
 
 			self.token.advance()
 
-		self.writer.writePop('constant','0')
+		self.writer.writePop('temp','0')
 		
 	#------------------------------------------------------------------------------
 	# This method compiles the letStatement
@@ -431,7 +436,7 @@ class CompilationEngine:
 						print(self.token.errorMsg()+"Undefined Variable\n")
 						sys.exit(0)
 
-					self.writer.writePush(self.segment[kind],self.table.indexOf(tempident))
+					self.writer.writePush(self.segment[kind],repr(self.table.indexOf(tempident)))
 
 					self.compileExpression(False)
 
@@ -458,7 +463,7 @@ class CompilationEngine:
 				tempsym = self.token.symbol()
 
 				#this means that we compile th expression on the other side of the = sign
-				elif '=' in tempsym:
+				if '=' in tempsym:
 					self.token.advance()
 					self.compileExpression(False)
 
@@ -467,7 +472,7 @@ class CompilationEngine:
 
 					else:
 						kind = self.table.kindOf(leftSideEq)
-						self.writer.writePop(self.segment[kind],self.table.indexOf(leftSideEq))
+						self.writer.writePop(self.segment[kind],repr(self.table.indexOf(leftSideEq)))
 
 					#sets tempsym to the current symbole
 					tempsym = self.token.symbol()
@@ -603,7 +608,7 @@ class CompilationEngine:
 				if self.key_if in tempkey and seen_once:
 					s = 'Place holeder does nothing'
 
-				elif self.key_else in tempkey:
+				elif self.key_else in tempkey and not ifElse:
 					ifElse = True
 					self.writer.writeGoto(currIfExit)
 					self.writer.writeLabel(currIf)
@@ -627,6 +632,10 @@ class CompilationEngine:
 					self.token.advance()
 					self.compileStatements()
 					seen_once = False
+					if ifElse:
+						print("here")
+						#self.token.advance()
+						break
 
 			self.token.advance()
 
@@ -638,7 +647,7 @@ class CompilationEngine:
 
 	#------------------------------------------------------------------------------
 	# This method compiles the expression
-	def compileExpression(self,subCall):
+	def compileExpression(self,enclosed):
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
@@ -647,21 +656,21 @@ class CompilationEngine:
 				tempsym = self.token.symbol()
 
 				#this means that we have term to compile
-				elif tempsym in '(~-':
-					self.compileTerm(subCall,True)
+				if tempsym in '(~-':
+					self.compileTerm(enclosed,True)
 
 				#signifies the end of an expression
 				elif tempsym in ';)],':
 					break
 
 			else:
-				self.compileTerm(subCall,False)
+				self.compileTerm(enclosed,False)
 
 			self.token.advance()
 
 	#------------------------------------------------------------------------------
 	# This method compiles the term
-	def compileTerm(self,subCall,isUnary):
+	def compileTerm(self,enclosed,isUnary):
 
 		while self.token.hasMoreTokens():
 			tokentype = self.token.tokenType()
@@ -680,7 +689,7 @@ class CompilationEngine:
 					self.writer.writePush('constant','0')
 
 				elif self.key_this in tempkey:
-					self.writer.writePush('this','0')
+					self.writer.writePush('pointer','0')
 					
 				
 				#any other keyword than the ones above results in an error
@@ -696,6 +705,7 @@ class CompilationEngine:
 				#means that it as a call to a var or class method
 				if '.' in peaks:
 					callName = ''
+					numArgs = 0
 					#replace this with code to do a look up
 					typeof = self.table.typeOf(tempident)
 					if 'NONE' in typeof:
@@ -703,7 +713,8 @@ class CompilationEngine:
 
 					else:
 					 	callName = typeof
-					 	self.writer.writePush(self.segment[self.table.kindOf(tempident)],self.table.indexOf(tempident))
+					 	numArgs += 1
+					 	self.writer.writePush(self.segment[self.table.kindOf(tempident)],repr(self.table.indexOf(tempident)))
 
 					self.token.advance()
 
@@ -727,7 +738,7 @@ class CompilationEngine:
 					self.token.advance()
 
 					#then compiles the expression list
-					numArgs = self.compileExpressionList()
+					numArgs += self.compileExpressionList()
 
 					self.writer.writeCall(callName,numArgs)
 
@@ -740,7 +751,7 @@ class CompilationEngine:
 
 					numArgs = self.compileExpressionList()
 
-					self.writer.writeCall(self.currClassName+'.'+self.curSubName,numArgs)
+					self.writer.writeCall(self.currClassName+'.'+tempident,numArgs if numArgs != 0 else 1)
 
 				#this means that it is accessing an array element
 				elif '[' in peaks:
@@ -752,9 +763,9 @@ class CompilationEngine:
 						print(self.token.errorMsg()+"Undefined Variable\n")
 						sys.exit(0)
 
-					self.writer.writePush(self.segment[kind],self.table.indexOf(tempident))
+					self.writer.writePush(self.segment[kind],repr(self.table.indexOf(tempident)))
 
-					self.compileExpression(subCall)
+					self.compileExpression(enclosed)
 
 					self.writer.writeArithmetic('+')
 
@@ -770,7 +781,7 @@ class CompilationEngine:
 						print(self.token.errorMsg()+"Undefined Variable\n")
 						sys.exit(0)
 
-					self.writer.writePush(self.segment[kind],self.table.indexOf(tempident))
+					self.writer.writePush(self.segment[kind],repr(self.table.indexOf(tempident)))
 
 			elif self.intc in tokentype:
 				self.writer.writePush('constant',self.token.intVal())
@@ -789,20 +800,21 @@ class CompilationEngine:
 				#this means that it is and expression surrounded by ()
 				if '(' in tempsym:
 					self.token.advance()
-					self.compileExpression(subCall)
+					self.compileExpression(True)
+					enclosed = True
 
 				#not unary operator 
 				elif '~' in tempsym:
 					self.token.advance()
 
-					self.compileTerm(subCall,False)
+					self.compileTerm(enclosed,False)
 
 					self.writer.writeArithmetic(tempsym)
 
-				elif '-' in tempsym and isUnary:
+				elif '-' in tempsym and isUnary and not enclosed:
 					self.token.advance()
 
-					self.compileTerm(subCall,False)
+					self.compileTerm(enclosed,False)
 
 					self.writer.writeArithmetic('NEG')
 
@@ -810,7 +822,7 @@ class CompilationEngine:
 				elif tempsym in '+-*/&|<>=':
 					self.token.advance()
 
-					self.compileTerm(subCall,False)
+					self.compileTerm(enclosed,False)
 
 					if '*' in tempsym:
 						self.writer.writeCall('Math.multiply',2)
@@ -851,8 +863,8 @@ class CompilationEngine:
 					break
 
 				else:
-					print(self.token.errorMsg())
-					sys.exit(0)
+					self.compileExpression(False)
+					expressCount += 1
 			else:
 				self.compileExpression(False)
 				expressCount += 1
