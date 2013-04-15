@@ -836,7 +836,7 @@ class CompilationEngine:
 
 					self.compileTerm(enclosed,False,True,tempsym)
 
-					if not callfromTerm:
+					if not callfromTerm:#modify this to work better
 						if '*' in tempsym:
 							self.writer.writeCall('Math.multiply',2)
 	
