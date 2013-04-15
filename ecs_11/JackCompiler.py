@@ -1,6 +1,6 @@
 import sys, string, os, io,re
-from jacktokenizer import JackToken
-from compilationenginexml import CompilationEngine
+from compilationengine import CompilationEngine
+from compilationenginexml import CompilationEngineXML
 #------------------------------------------------------------------------------
 #Chris Card
 #CS410
@@ -10,7 +10,7 @@ from compilationenginexml import CompilationEngine
 #This tokenizes and compiles the jack file Main Program
 #Use:
 #   JackCompiler.py <option(optional)> <path to directory|filename>
-#			<option> = -t for tokenizer
+#			<option> = -x for xml
 #					   omit for full compiler
 #			<path to directory|filename> = is the path to the directory 
 #								containing files to compile or the file to
@@ -46,28 +46,35 @@ if len(sys.argv) < 2: #Checks to see if user put in file
 #if option was chosen to generate the tokenized output
 if len(sys.argv) == 3:
 	in_file=sys.argv[2]
+	option = sys.argv[1]
 	fullCompiler = False
 
-	#Checks for correct file name if not then assumes directory
-	if re.search('.*\.jack',in_file) is None:
-		is_dir=True
-
-		#goes through the directory and finds the .jack files
-		temp = os.listdir(in_file)
-		for f in temp:
-			if re.search('.*\.jack',f) is not None:
-				temp_s = in_file+"/"+f
-				directory.append(temp_s)
-		
-		#if no files found in directory then error
-		if len(directory) == 0:
-			print("Error no '*.jack' files in path "+in_file)
-			sys.exit(0)
+	if '-x' in option:
+		#Checks for correct file name if not then assumes directory
+		if re.search('.*\.jack',in_file) is None:
+			is_dir=True
+	
+			#goes through the directory and finds the .jack files
+			temp = os.listdir(in_file)
+			for f in temp:
+				if re.search('.*\.jack$',f) is not None:
+					temp_s = in_file+"/"+f
+					directory.append(temp_s)
+			
+			#if no files found in directory then error
+			if len(directory) == 0:
+				print("Error no '*.jack' files in path "+in_file)
+				sys.exit(0)
+	
+		else:
+			#Strips .jack off the end and adds .xml
+			temp_out=re.search('(.*)(\.jack)',in_file)
+			out_file+=temp_out.group(1)+'2.xml'
 
 	else:
-		#Strips .jack off the end and adds .xml
-		temp_out=re.search('(.*)(\.jack)',in_file)
-		out_file+=temp_out.group(1)+'T2.xml'
+		print('Incorrect option')
+		print('JackCompiler.py <option(optional)> <path to directory|filename>')
+		sys.exit(0)
 
 #If choose to run full compiler
 else:
@@ -80,7 +87,7 @@ else:
 		#goes through the directory and finds the .vm files
 		temp = os.listdir(in_file)
 		for f in temp:
-			if re.search('.*\.jack',f) is not None:
+			if re.search('.*\.jack$',f) is not None:
 				temp_s = in_file+"/"+f
 				directory.append(temp_s)
 		
@@ -92,7 +99,7 @@ else:
 	else:
 		#Strips .jack off the end and adds .xml
 		temp_out=re.search('(.*)(\.jack)',in_file)
-		out_file+=temp_out.group(1)+'2.xml'
+		out_file+=temp_out.group(1)+'.vm'
 
 
 
@@ -105,7 +112,9 @@ if fullCompiler: #if option was ommited meaning full compilation
 		for d in directory:
 			#strips '.jack' off the end and adds '2.xml'
 			temp_out = re.search('(.*)(\.jack)',d)
-			out_file = temp_out.group(1)+'2.xml'
+			out_file = temp_out.group(1)+'.vm'
+
+			print("Compiling: "+d+"....")
 
 			compiler = CompilationEngine(d,out_file)
 			compiler.compileClass()
@@ -119,62 +128,14 @@ else: #option for tokenized output selected
 		for d in directory:
 			#Strips '.jack' off the end and adds 'T2.xml'
 			temp_out = re.search('(.*)(\.jack)',d)
-			out_file = temp_out.group(1)+'T2.xml'
+			out_file = temp_out.group(1)+'2.xml'
 
-			token = JackToken(d)
-			out = open(out_file,'w')
-			out.write("<tokens>\n")
-			token.advance()
-			while token.hasMoreTokens():
-				if 'KEYWORD' in token.tokenType():
-					out.write((space*offset)+"<keyword>"+token.keyWord().lower()+"</keyword>\n")
-				elif 'SYMBOL' in token.tokenType():
-					tempsym = token.symbol()
-					if '<' in tempsym:
-						tempsym = '&lt;'
-					elif '>' in tempsym:
-						tempsym = '&gt;'
-					elif '&' in tempsym:
-						tempsym = '&amp;'
-					out.write((space*offset)+"<symbol>"+tempsym+"</symbol>\n")
-				elif 'IDENTIFIER' in token.tokenType():
-					out.write((space*offset)+"<identifier>"+token.identifier()+"</identifier>\n")
-				elif 'INT_CONST' in token.tokenType():
-					out.write((space*offset)+"<integerConstant>"+token.intVal()+"</integerConstant>\n")
-				elif 'STRING_CONST' in token.tokenType():
-					out.write((space*offset)+"<stringConstant>"+token.stringVal()+"</stringConstant>\n")
-				token.advance()
-		
-			out.write("</tokens>")
-			out.close()
+			compilerxml = CompilationEngineXML(d,out_file)
+			compilerxml.compileClass()
 
 	else: #just a file
-		token = JackToken(in_file)
-		out = open(out_file,'w')
-		out.write("<tokens>\n")
-		token.advance()
-		while token.hasMoreTokens():
-			if 'KEYWORD' in token.tokenType():
-				out.write((space*offset)+"<keyword>"+token.keyWord().lower()+"</keyword>\n")
-			elif 'SYMBOL' in token.tokenType():
-				tempsym = token.symbol()
-				if '<' in tempsym:
-					tempsym = '&lt;'
-				elif '>' in tempsym:
-					tempsym = '&gt;'
-				elif '&' in tempsym:
-					tempsym = '&amp;'
-				out.write((space*offset)+"<symbol>"+tempsym+"</symbol>\n")
-			elif 'IDENTIFIER' in token.tokenType():
-				out.write((space*offset)+"<identifier>"+token.identifier()+"</identifier>\n")
-			elif 'INT_CONST' in token.tokenType():
-				out.write((space*offset)+"<integerConstant>"+token.intVal()+"</integerConstant>\n")
-			elif 'STRING_CONST' in token.tokenType():
-				out.write((space*offset)+"<stringConstant>"+token.stringVal()+"</stringConstant>\n")
-			token.advance()
-	
-		out.write("</tokens>")
-		out.close()
+		compilerxml = CompilationEngineXML(in_file,out_file)
+		compilerxml.compileClass()
 
 
 
