@@ -79,10 +79,10 @@ class SymbolTable:
 	# This returns the number of variables with a given kind
 	def varCount(self,kind):
 		if 'STATIC' in kind or 'FIELD' in kind:
-			count = 0
-			for k in self.kindClass.values():
-				if k in kind:
-					count += 1
+			count = self.classHeap
+			#for k in self.kindClass.values():
+			#	if k in kind:
+			#		count += 1
 
 			return count
 
