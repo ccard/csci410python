@@ -438,7 +438,6 @@ class CompilationEngine:
 
 					self.writer.writeArithmetic('+')
 
-					self.writer.writePop('pointer','1')
 					isArray = True
 			
 					self.token.advance()
@@ -464,6 +463,9 @@ class CompilationEngine:
 					self.compileExpression(False)
 
 					if isArray:
+						self.writer.writePop('temp','0')
+						self.writer.writePop('pointer','1')
+						self.writer.writePush('temp','0')
 						self.writer.writePop('that','0')
 
 					else:
@@ -664,7 +666,7 @@ class CompilationEngine:
 					break
 
 			else:
-				self.compileTerm(enclosed,False)
+				self.compileTerm(enclosed,enclosed)
 
 			self.token.advance()
 
@@ -741,6 +743,8 @@ class CompilationEngine:
 					numArgs += self.compileExpressionList()
 
 					self.writer.writeCall(callName,numArgs)
+					if isUnary:
+						break
 
 				#this means that it is a subroutine call to one of its own methods
 				elif '(' in peaks:
@@ -752,6 +756,8 @@ class CompilationEngine:
 					numArgs = self.compileExpressionList()+1
 
 					self.writer.writeCall(self.currClassName+'.'+tempident,numArgs if numArgs != 0 else 1)
+					if isUnary:
+						break
 
 				#this means that it is accessing an array element
 				elif '[' in peaks:
@@ -773,6 +779,9 @@ class CompilationEngine:
 					
 					self.writer.writePush('that','0')
 
+					if isUnary:
+						break
+
 				#other wise it is just an identifier
 				else:
 					kind = self.table.kindOf(tempident)
@@ -782,6 +791,8 @@ class CompilationEngine:
 						sys.exit(0)
 
 					self.writer.writePush(self.segment[kind],repr(self.table.indexOf(tempident)))
+					if isUnary:
+						break
 
 			elif self.intc in tokentype:
 				self.writer.writePush('constant',self.token.intVal())
@@ -822,7 +833,7 @@ class CompilationEngine:
 				elif tempsym in '+-*/&|<>=':
 					self.token.advance()
 
-					self.compileTerm(enclosed,False)
+					self.compileTerm(enclosed,True)
 
 					if '*' in tempsym:
 						self.writer.writeCall('Math.multiply',2)
