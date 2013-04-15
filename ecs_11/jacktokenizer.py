@@ -175,11 +175,11 @@ class JackToken:
 				self.curToken='NILL'
 
 			#if a symbol is found
-			elif re.search('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1}',self.line) is not None:
-				temp = re.search('(^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1})',self.line)
+			elif re.search('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~\|]{1}',self.line) is not None:
+				temp = re.search('(^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~\|]{1})',self.line)
 				self.curToken = self.idents['sym']
 				self.curSym = temp.group(1)
-				self.line = re.sub('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~]{1}','',self.line)
+				self.line = re.sub('^[\(\)\{\}\[\]\.\,\;\+\-\*\/\&\<\>\=\~\|]{1}','',self.line)
 			
 			#if a number is found
 			elif re.search('^[0-9]+',self.line) is not None:
