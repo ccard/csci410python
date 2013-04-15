@@ -834,9 +834,9 @@ class CompilationEngine:
 						else:
 							self.writer.writeArithmetic(prevSym)
 
-					self.compileTerm(enclosed,False,True,tempsym)
+					what = self.compileTerm(enclosed,False,True,tempsym)
 
-					if not callfromTerm:#modify this to work better
+					if what and self.token.peak() in ']);,':#modify this to work better
 						if '*' in tempsym:
 							self.writer.writeCall('Math.multiply',2)
 	
@@ -846,11 +846,18 @@ class CompilationEngine:
 						else:
 							self.writer.writeArithmetic(tempsym)
 					
+						return False
+
+					elif not what and self.token.peak() in ']);,':
+						return False
+					
 			#if the next token is ]);, means the end of a term
 			if self.token.peak() in ']);,':
 				break
 
 			self.token.advance()
+		
+		return True
 
 	#------------------------------------------------------------------------------
 	# This method compiles the expressionList
