@@ -336,15 +336,11 @@ class CompilationEngine:
 
 				elif self.key_if in tempkey:
 					self.compileIf()
-					if self.sym not in self.token.tokenType():
-						#continue because we could have multiple if statements found and
-						#the current token could be the key word if so we don't want to advance
-						#the tokenizer prematurely
-						continue
-
-					else:
-						self.token.advance()
-						break
+					
+					#continue because we could have multiple if statements found and
+					#the current token could be the key word if so we don't want to advance
+					#the tokenizer prematurely
+					continue
 
 				elif self.key_while in tempkey:
 					self.compileWhile()
@@ -633,9 +629,13 @@ class CompilationEngine:
 					self.compileStatements()
 					seen_once = False
 					if ifElse:
-						print("here")
-						#self.token.advance()
+						self.token.advance()
 						break
+
+				#just incase this catches } which means that its
+				#the end of an if else block that isn't this one
+				elif '}' in tempsym:
+					break
 
 			self.token.advance()
 
@@ -749,7 +749,7 @@ class CompilationEngine:
 					self.token.advance()
 					self.token.advance()
 
-					numArgs = self.compileExpressionList()
+					numArgs = self.compileExpressionList()+1
 
 					self.writer.writeCall(self.currClassName+'.'+tempident,numArgs if numArgs != 0 else 1)
 
