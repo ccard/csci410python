@@ -6,7 +6,7 @@ from compilationenginexml import CompilationEngineXML
 #CS410
 #ECS project 10
 #python 3.3
-#Due:3/25/13
+#Due:4/22/13
 #This tokenizes and compiles the jack file Main Program
 #Use:
 #   JackCompiler.py <option(optional)> <path to directory|filename>
@@ -17,8 +17,7 @@ from compilationenginexml import CompilationEngineXML
 #								compile
 #Output:
 #	The output file(s) are stored in the same directory as the input file(s)
-#	except the output file(s) are in the following formate '*2.xml' so as
-#	to not interfier with the installed files 
+#	except the output file(s) are in the following formate '*.vm'
 #------------------------------------------------------------------------------
 
 
@@ -110,10 +109,11 @@ else:
 if fullCompiler: #if option was ommited meaning full compilation
 	if is_dir: #if it is a directory compile all '*.jack' files
 		for d in directory:
-			#strips '.jack' off the end and adds '2.xml'
+			#strips '.jack' off the end and adds '.vm'
 			temp_out = re.search('(.*)(\.jack)',d)
 			out_file = temp_out.group(1)+'.vm'
 
+			#prints out what file it is compiling at the moment
 			print("Compiling: "+d+"....")
 
 			compiler = CompilationEngine(d,out_file)
@@ -126,7 +126,7 @@ if fullCompiler: #if option was ommited meaning full compilation
 else: #option for tokenized output selected
 	if is_dir: #if it is a directory
 		for d in directory:
-			#Strips '.jack' off the end and adds 'T2.xml'
+			#Strips '.jack' off the end and adds '2.xml'
 			temp_out = re.search('(.*)(\.jack)',d)
 			out_file = temp_out.group(1)+'2.xml'
 
