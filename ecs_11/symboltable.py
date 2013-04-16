@@ -79,10 +79,8 @@ class SymbolTable:
 	# This returns the number of variables with a given kind
 	def varCount(self,kind):
 		if 'STATIC' in kind or 'FIELD' in kind:
+			#count of the class heap because static is never need to be counted
 			count = self.classHeap
-			#for k in self.kindClass.values():
-			#	if k in kind:
-			#		count += 1
 
 			return count
 
@@ -97,6 +95,7 @@ class SymbolTable:
 	#--------------------------------------------------------------------------
 	# This Method returns the kind of a identifier
 	def kindOf(self,name):
+		#check subroutine scope first then class scope
 		if name in self.kindSub:
 			return self.kindSub[name]
 
@@ -109,6 +108,7 @@ class SymbolTable:
 	#--------------------------------------------------------------------------
 	# This returns the type of an identifier
 	def typeOf(self,name):
+		#check subroutine scope first then class scope
 		if name in self.typeSub:
 			return self.typeSub[name]
 
@@ -121,6 +121,7 @@ class SymbolTable:
 	#--------------------------------------------------------------------------
 	# This returns the index of an identifier
 	def indexOf(self,name):
+		#check subroutine scope first then class scope
 		if name in self.indexSub:
 			return self.indexSub[name]
 
